@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from includes import Maze
+from includes import Rat
+from includes import Engine
+
 TEAM_NAME = "Speedy Gonzales"
 
 MOVE_DOWN = 'D'
@@ -21,10 +25,14 @@ def preprocessing (mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocat
     player = Player(playerLocation)
     opponent = Opponent(opponentLocation)
 
-def turn (mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
+def update(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
+    # Update players
     player.location = playerLocation
     opponent.location = opponentLocation
-    player.process(opponent, piecesOfCheese)
 
-###################################################################################################################################################################################################################################
-###################################################################################################################################################################################################################################
+    # Update Engine    
+    engine.update(player, opponent)
+    
+def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
+    
+    player.process(maze, opponent, piecesOfCheese)
