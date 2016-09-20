@@ -15,6 +15,7 @@ class Maze(Graph):
     def __init__(self, mazeMap):
         self.arrayMap = mazeMap
         self.matrixMap = self.convertToMatrix(mazeMap)
+        self.nodes = self.getNodes(mazeMap)
         
     def convertToMatrix(self, mazeMap):
         pass
@@ -22,8 +23,11 @@ class Maze(Graph):
     def calculateMetaGraph(self, from_position, point_list):
         pass
     
-    def getNodes():
-        pass
+    def getNodes(self, mazeMap):
+        r = []
+        for key in mazeMap:
+            r.append(key)
+        return r
     
     def findMostRapidWay(from_pos, to_pos)
         pass
