@@ -5,9 +5,8 @@ Created on Fri Sep 16 18:07:45 2016
 @author: Thibault/Clément
 """
 
-import copy
+import copy as cp
 import numpy as np
-
 
 class Astar:
     def __init__(self, maze, origin, destination):
@@ -33,19 +32,19 @@ class Astar:
         openSet = [self.origin]
 
         # declare cameFrom
-        cameFrom = copy.deepcopy(self.maze.arrayMap)
+        cameFrom = cp.deepcopy(self.maze.arrayMap)
 
         for k in cameFrom:
             cameFrom[k] = 0
 
         # declare gScore
-        gScore = copy.deepcopy(self.maze.arrayMap)
+        gScore = cp.deepcopy(self.maze.arrayMap)
         
         for k in gScore:
             gScore[k] = np.inf
 
         # declare fScore
-        fScore = copy.deepcopy(self.gScore)
+        fScore = cp.deepcopy(self.gScore)
         
         gScore[self.origin] = 0
         fScore[self.origin] = self.heuristic(self.origin)

@@ -5,9 +5,8 @@ Created on Thu Sep 15 22:35:55 2016
 @author: Thibault/Clément
 """
 
-from numpy import *
-from ..process.algorithms import Astar
-from ..process.algorithms import FloydWarshall
+from ..algorithms import Astar
+from ..algorithms import FloydWarshall
 
 class Maze(object):
     def __init__(self, mazeMap, mazeWidth, mazeHeight, piecesOfCheese):
