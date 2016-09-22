@@ -8,8 +8,7 @@ Created on Thu Sep 15 22:35:55 2016
 from ..algorithms import Astar
 from ..algorithms import FloydWarshall
 
-
-class Maze(object):
+class Maze:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
         self.mazeMap = mazeMap
         self.mazeWidth = mazeWidth
