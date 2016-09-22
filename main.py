@@ -5,7 +5,7 @@ from includes import Maze
 from includes import Rat
 from includes import Engine
 
-TEAM_NAME = "Speedy Gonzales"
+TEAM_NAME = "PLS_TEAM"
 
 MOVE_DOWN = 'D'
 MOVE_LEFT = 'L'

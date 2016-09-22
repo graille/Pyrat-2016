@@ -8,9 +8,6 @@ Created on Thu Sep 15 22:35:55 2016
 from numpy import *
 from . import Rat
 
-class Graph(object):
-    pass
-
 class Maze(Graph):
     def __init__(self, mazeMap, mazeWidth, mazeHeight, piecesOfCheese):
         self.mazeMap = mazeMap
