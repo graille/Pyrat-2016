@@ -33,8 +33,8 @@ class Maze(Graph):
         """
         Prend en argument 
         Renvoie une matrice où les cases sont triées en fonction de leur id et où 
-        -1 signifie qu'il n'y a pas de passage direct entre les deux cases, 
-        1 signifie qu'il y a passage et 0 que l'on reste sur la même case
+        np.inf signifie qu'il n'y a pas de passage direct entre les deux cases, 
+        n>0 signifie qu'il y a passage en n coups et 0 que l'on reste sur la même case
         """
         self.matrixMap = np.array([[ -1 if i != j else 0 for i in range(NB_CASES)] for j in range(NB_CASES)]) #On crée une matrice contenant que des -1 sauf sur la diagonale
         for locationCaseAccessible1 in self.mazeMap:
@@ -44,8 +44,15 @@ class Maze(Graph):
                 self.matrixMap[cle_case1][cle_case2],self.matrixMap[cle_case2][cle_case1] = self.mazeMap[locationCaseAccessible1][locationCaseAccessible2],self.mazeMap[locationCaseAccessible1][locationCaseAccessible2]
 
     
-    def calculateMetaGraph(self, from_position, point_list):
-        pass
+    def calculateMetaGraph(self, from_location, to_location_list):
+        """Remplit les cases de la matrice des distances uniquement pour les cases spécifiées"""
+        from_location_ID = location_to_id(from_location)
+        for to_location in to_location_list :
+            to_location_ID = location_to_id(to_location)
+            astar = Astar(self, from_location, to_location)
+            (dist, path) = astar.process()
+            self.pathMatrix[from_location_ID, to_location_ID] = path
+            self.matrixMap[from_location_ID, to_location_ID] =  dist
 
     def getNodes(self, mazeMap):
         r = []
