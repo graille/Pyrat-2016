@@ -17,18 +17,17 @@ class Maze(Graph):
         self.matrixMap = self.convertToMatrix(mazeMap)
         self.nodes = self.getNodes(mazeMap)
 
-    def convertToMatrix(self, mazeMap):
-        pass
-
     def location_to_id(self, location):
         """Converti les coordonnees d'une case en sa cle primaire"""
         x,y  = location[0], location[1]
         id_case = x*DIMENSION_M+y
         return id_case
+
     def id_to_location(self, id_case):
         """Converti la cle primaire d'une case en ses coordonnees"""
         location = (id_case//DIMENSION_M, id_case%DIMENSION_M)
         return location
+    
     def convertToMatrix(self):
         """
         Prend en argument 
