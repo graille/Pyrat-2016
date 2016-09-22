@@ -16,10 +16,10 @@ class Maze(Graph):
         self.arrayMap = mazeMap
         self.matrixMap = self.convertToMatrix(mazeMap)
         self.nodes = self.getNodes(mazeMap)
-        
+
     def convertToMatrix(self, mazeMap):
         pass
-        
+
     def location_to_id(self, location):
         """Converti les coordonnees d'une case en sa cle primaire"""
         x,y  = location[0], location[1]
