@@ -8,7 +8,8 @@ Created on Fri Sep 16 18:07:45 2016
 import copy
 import numpy as np
 
-class Astar():
+
+class Astar:
     def __init__(self, maze, origin, destination):
         self.maze = maze
         self.setOrigin(origin)
@@ -24,6 +25,9 @@ class Astar():
         self.goal = n
 
     def process(self):
+        self.result = self.astar()
+
+    def astar(self):
         # Initialize sets
         closedSet = []
         openSet = [self.origin]
