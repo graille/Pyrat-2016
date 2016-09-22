@@ -15,6 +15,10 @@ class Maze(Graph):
     def __init__(self, mazeMap):
         self.arrayMap = mazeMap
         self.matrixMap = self.convertToMatrix(mazeMap)
+        self.nodes = self.getNodes(mazeMap)
+        
+    def convertToMatrix(self, mazeMap):
+        pass
         
     def location_to_id(self, location):
         """Converti les coordonnees d'une case en sa cle primaire"""
@@ -42,7 +46,13 @@ class Maze(Graph):
     
     def calculateMetaGraph(self, from_position, point_list):
         pass
-    
+
+    def getNodes(self, mazeMap):
+        r = []
+        for key in mazeMap:
+            r.append(key)
+        return r
+
     def getNodes():
         pass
     
