@@ -8,7 +8,6 @@ Created on Fri Sep 16 18:09:14 2016
 
 import numpy as np
 
-
 class FloydWarshall:
     def __init__(self, maze):
         self.maze = maze
