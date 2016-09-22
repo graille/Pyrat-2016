@@ -2,6 +2,7 @@
 """
 Created on Fri Sep 16 18:09:14 2016
 
+<<<<<<< HEAD
 @author: Clément
 """
 
