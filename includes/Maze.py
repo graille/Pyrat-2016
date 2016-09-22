@@ -13,15 +13,15 @@ class Graph(object):
 
 class Maze(Graph):
     def __init__(self, mazeMap, mazeWidth, mazeHeight, piecesOfCheese):
-		self.mazeMap = mazeMap
-		self.mazeWidth = mazeWidth
-		self.mazeHeight = mazeHeight
+        self.mazeMap = mazeMap
+        self.mazeWidth = mazeWidth
+        self.mazeHeight = mazeHeight
         self.NB_CASES = self.mazeWidth * self.mazeHeight
-		self.pathMatrix = None
-		self.matrixMap = None
-		self.convertToMatrix()
-		self.FM = FloydWarshall(self)
-		self.FM.process()
+        self.pathMatrix = None
+        self.matrixMap = None
+        self.convertToMatrix()
+        self.FM = FloydWarshall(self)
+        self.FM.process()
 
     def location_to_id(self, location):
         """Converti les coordonnees d'une case en sa cle primaire"""
@@ -42,17 +42,17 @@ class Maze(Graph):
         n>0 signifie qu'il y a passage en n coups et 0 que l'on reste sur la même case
         """
         self.pathMatrix=np.array([[ None for i in range(self.NB_CASES)]for j in range(self.NB_CASES)])#Matrice qui donne les chemins minimaux entre deux cases
-		for i in range(self.NB_CASES):
-			for j in range(self.NB_CASES):
-				self.pathMatrix[i][j] = []
-		self.matrixMap = np.array([[ np.inf if i != j else 0 for i in range(self.NB_CASES)] for j in range(self.NB_CASES)]) #On crée une matrice contenant que des -1 sauf sur la diagonale
-		for locationCaseAccessible1 in self.mazeMap:
-			cle_case1 = self.location_to_id(locationCaseAccessible1)
-			for locationCaseAccessible2 in self.mazeMap[locationCaseAccessible1]:
-				cle_case2 = self.location_to_id(locationCaseAccessible2)
-				self.matrixMap[cle_case1][cle_case2],self.matrixMap[cle_case2][cle_case1] = self.mazeMap[locationCaseAccessible1][locationCaseAccessible2],self.mazeMap[locationCaseAccessible1][locationCaseAccessible2]
-				self.pathMatrix[cle_case1][cle_case2] = self.getMove(locationCaseAccessible1, locationCaseAccessible2)
-				self.pathMatrix[cle_case2][cle_case1] = self.getMove(locationCaseAccessible2, locationCaseAccessible1)
+        for i in range(self.NB_CASES):
+            for j in range(self.NB_CASES):
+                self.pathMatrix[i][j] = []
+        self.matrixMap = np.array([[ np.inf if i != j else 0 for i in range(self.NB_CASES)] for j in range(self.NB_CASES)]) #On crée une matrice contenant que des -1 sauf sur la diagonale
+        for locationCaseAccessible1 in self.mazeMap:
+            cle_case1 = self.location_to_id(locationCaseAccessible1)
+            for locationCaseAccessible2 in self.mazeMap[locationCaseAccessible1]:
+                cle_case2 = self.location_to_id(locationCaseAccessible2)
+                self.matrixMap[cle_case1][cle_case2],self.matrixMap[cle_case2][cle_case1] = self.mazeMap[locationCaseAccessible1][locationCaseAccessible2],self.mazeMap[locationCaseAccessible1][locationCaseAccessible2]
+                self.pathMatrix[cle_case1][cle_case2] = self.getMove(locationCaseAccessible1, locationCaseAccessible2)
+                self.pathMatrix[cle_case2][cle_case1] = self.getMove(locationCaseAccessible2, locationCaseAccessible1)
     
     def calculateMetaGraph(self, from_location, to_location_list):
         """Remplit les cases de la matrice des distances uniquement pour les cases spécifiées"""
