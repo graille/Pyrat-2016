@@ -18,6 +18,7 @@ class Maze:
 
         self.pathMatrix = None
         self.matrixMap = None
+        self.pathDico = {}
 
         self.convertToMatrix()
         #self.FM = FloydWarshall(self)
@@ -50,6 +51,28 @@ class Maze:
                 self.matrixMap[cle_case1][cle_case2], self.matrixMap[cle_case2][cle_case1] = \
                 self.mazeMap[locationCaseAccessible1][locationCaseAccessible2], self.mazeMap[locationCaseAccessible1][
                     locationCaseAccessible2]
+    
+    def convertToMatrix2(self):
+        """
+        Prend en argument
+        Renvoie une un dictionnaire où les clefs sont les clefs sont des cases et où
+        np.inf signifie qu'il n'y a pas de passage direct entre les deux cases,
+        n>0 signifie qu'il y a passage en n coups et 0 que l'on reste sur la même case
+        """
+        for i in range(maze.mazeHeight):
+            for j in range(maze.mazeWidth):
+                for i in range(maze.mazeHeight):
+                    for j in range(maze.mazeWidth):
+                if (i, j) in self.mazeMap and (k,l) in self.mazeMap[(i,j)]:
+                    self.dictMap[(i,j)][(k,l)] = self.mazeMap[(i,j)][(k,l)]
+                    self.dictMap[(k,l)][(i,j)] = self.mazeMap[(i,j)][(k,l)]
+                elif (k,l) in self.mazeMap and (i, j) in self.mazeMap[(k,l)]:
+                    self.dictMap[(i,j)][(k,l)] = self.mazeMap[(k,l)][(i,j)]
+                    self.dictMap[(k,l)][(i,j)] = self.mazeMap[(k,l)][(i,j)]
+                else:
+                    self.dictMap[(i,j)][(k,l)] = np.inf
+                    self.dictMap[(k,l)][(i,j)] = np.inf
+
 
     def calculateMetaGraph(self, from_location, to_location_list):
         """Remplit les cases de la matrice des distances uniquement pour les cases spécifiées"""
