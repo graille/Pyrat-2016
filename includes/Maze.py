@@ -18,7 +18,10 @@ class Maze:
 
         self.pathMatrix = None
         self.matrixMap = None
-        self.pathDico = {}
+        self.pathDict = {}
+
+        self.distanceMetagraph = {} #matrice des distances du métagraph sous forme de dictionnaire
+        self.pathMetagraph = {} #matrice des chemins du métagraph sous forme de dictionnaire
 
         self.convertToMatrix()
         #self.FM = FloydWarshall(self)
@@ -35,6 +38,7 @@ class Maze:
         location = (id_case // self.mazeHeight, id_case % self.mazeHeight)
         return location
 
+#             FONCTIONNE AVEC UNE STRUCTURE DE MATRICE
     def convertToMatrix(self):
         """
         Prend en argument
@@ -52,6 +56,24 @@ class Maze:
                 self.mazeMap[locationCaseAccessible1][locationCaseAccessible2], self.mazeMap[locationCaseAccessible1][
                     locationCaseAccessible2]
     
+    
+
+
+    def calculateMetaGraph(self, from_location, to_location_list):
+        """Remplit les cases de la matrice des distances uniquement pour les cases spécifiées"""
+        from_location_ID = self.location_to_id(from_location)
+
+        for to_location in to_location_list:
+            to_location_ID = self.location_to_id(to_location)
+
+            astar = Astar(self, from_location, to_location)
+
+            (dist, path) = astar.process()
+            self.pathMatrix[from_location_ID, to_location_ID] = path
+            self.matrixMap[from_location_ID, to_location_ID] = dist
+
+ 
+    #            2 FONCTIONNE AVEC UNE STRUCTURE DE DICTIONNAIRE
     def convertToMatrix2(self):
         """
         Prend en argument
@@ -73,19 +95,14 @@ class Maze:
                     self.dictMap[(i,j)][(k,l)] = np.inf
                     self.dictMap[(k,l)][(i,j)] = np.inf
 
-
-    def calculateMetaGraph(self, from_location, to_location_list):
-        """Remplit les cases de la matrice des distances uniquement pour les cases spécifiées"""
-        from_location_ID = self.location_to_id(from_location)
-
-        for to_location in to_location_list:
-            to_location_ID = self.location_to_id(to_location)
-
-            astar = Astar(self, from_location, to_location)
-
-            (dist, path) = astar.process()
-            self.pathMatrix[from_location_ID, to_location_ID] = path
-            self.matrixMap[from_location_ID, to_location_ID] = dist
+    def calculateMetaGraph2(self, from_location, to_location_list):
+        """Remplit les cases du dictionnaire d'adjacence et du dictionnaire de chemins pour les cases spécifiées"""
+        bfs = BFS_P(self.dictMap, from_location, to_location_list)
+        bfs.process()
+        for to_location in to_location_list :
+            self.distanceMetagraph[from_location][to_location] = bfs.getWeight(to_location)
+            self.pathMetagraph[from_location][to_location] = bfs.getPath(to_location)
+            
 
     def getDistance(self, from_location, to_location):
         from_location_ID, to_location_ID = self.location_to_id(from_location), self.location_to_id(to_location)
