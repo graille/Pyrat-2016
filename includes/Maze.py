@@ -79,18 +79,21 @@ class Maze:
         return al.result
 
     def getMove(self, origin, goal):
-        i1,j1 = origin
-        i2,j2 = goal
+        if origin != goal:
+            i1,j1 = origin
+            i2,j2 = goal
 
-        if i1 - i2 == -1:
-            return 'D'
-        elif i1 - i2 == 1:
-            return 'U'
-        elif j1 - j2 == -1:
-            return 'R'
-        elif j1 - j2 == 1:
-            return 'L'
-        else:
+            if i1 - i2 == -1:
+                return 'D'
+            elif i1 - i2 == 1:
+                return 'U'
+            elif j1 - j2 == -1:
+                return 'R'
+            elif j1 - j2 == 1:
+                return 'L'
+            else:
+                return False
+        else
             return False
 
     def getNeighbors(self, position):
