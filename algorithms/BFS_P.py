@@ -69,3 +69,9 @@ class BFS_P:
                     q.put_nowait((p - 1, c))
             else:
                 continue
+
+        self.clear()
+
+    def getWeight(self, n):
+        return self.nWeight[n]
+
