@@ -5,8 +5,11 @@ Created on Thu Sep 15 22:35:55 2016
 @author: Thibault/Clément
 """
 
-from ..algorithms import Astar
-from ..algorithms import FloydWarshall
+from algorithms.Astar import *
+from algorithms.FloydWarshall import *
+
+import numpy as np
+
 
 class Maze:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
@@ -20,6 +23,8 @@ class Maze:
         self.matrixMap = None
 
         self.convertToMatrix()
+        self.nodes = list(self.getNodes())
+
         #self.FM = FloydWarshall(self)
         #self.FM.process()
 
@@ -93,7 +98,7 @@ class Maze:
                 return 'L'
             else:
                 return False
-        else
+        else:
             return False
 
     def getNeighbors(self, position):

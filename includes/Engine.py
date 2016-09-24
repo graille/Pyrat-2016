@@ -5,8 +5,6 @@ Created on Thu Sep 15 22:41:11 2016
 @author: Thibault/Clément
 """
 
-from . import *
-
 
 class Engine(object):
     def __init__(self, nb_cheese):

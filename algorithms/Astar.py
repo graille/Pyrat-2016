@@ -10,13 +10,16 @@ import numpy as np
 
 
 class Astar:
-    def __init__(self, maze, origin, goal):
+    def __init__(self, maze, origin = None, goal = None):
         self.maze = maze
-        self.setOrigin(origin)
-        self.setGoal(goal)
+        self.setOrigin(origin) if origin else ()
+        self.setGoal(goal) if goal else ()
 
     def heuristic(self, n1, n2):
         return np.sqrt((n1[0] - n2[0]) ** 2 + (n1[1] - n2[1]) ** 2)
+
+    def clear(self):
+        pass
 
     def setOrigin(self, n):
         self.origin = n
@@ -93,3 +96,6 @@ class Astar:
             current = new
         path.append(current)
         return (total_distance, total_path[::-1])
+
+    def getResult(self):
+        return self.result
