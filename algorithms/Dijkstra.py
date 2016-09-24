@@ -17,13 +17,14 @@ class Dijkstra:
 
         # Initilialize pathArray
         self.pathArray = cp.deepcopy(self.maze.mazeMap)
-
-        self.clear()
+        self.d = cp.deepcopy(self.maze.mazeMap)
 
     def clear(self):
-        self.d = None
-        for node in self.maze.nodes:
+        for node in self.pathArray.keys():
             self.pathArray[node] = None
+
+        for node in self.d.keys():
+            self.d[node] = np.inf
 
     def setOrigin(self, n):
         self.origin = n
@@ -32,11 +33,11 @@ class Dijkstra:
         self.goal = n
 
     def process(self):
-        self.result = self.algorithm()
+        self.algorithm()
 
     def algorithm(self):
         self.clear()
-        self.initialize()
+        self.d[self.origin] = 0
 
         Q = cp.copy(self.maze.nodes)
 
@@ -44,17 +45,12 @@ class Dijkstra:
             n1 = self.findMin(Q)
             Q.remove(n1)
 
+            if self.goal and n1 == self.goal:
+                break
+
             for n2 in self.maze.getNeighbors(n1):
                 self.majDistance(n1, n2)
-
-        return self.reconstructPath()
-
-    def initialize(self):
-        self.d = cp.deepcopy(self.maze.mazeMap)
-        for node in self.maze.nodes:
-            self.d[node] = np.inf
-
-        self.d[self.origin] = 0
+        print(self.pathArray)
 
     def findMin(self, Q):
         m = np.inf
@@ -91,4 +87,4 @@ class Dijkstra:
         return (total_distance, total_path[::-1])
 
     def getResult(self):
-        return self.result
+        return self.reconstructPath()

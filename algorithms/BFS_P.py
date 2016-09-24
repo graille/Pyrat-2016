@@ -21,9 +21,6 @@ class BFS_P:
         self.nPredecessor = cp.deepcopy(maze.mazeMap) # Precessessor of all nodes
         self.nExplored = cp.deepcopy(maze.mazeMap) # Explored nodes
 
-        # Clear attributes
-        self.clear()
-
     def clear(self):
         for n in self.maze.nodes:
             self.nWeight[n] = np.inf
@@ -46,6 +43,7 @@ class BFS_P:
 
     def algorithm(self):
         self.clear()
+
         q = Queue()
         q.put_nowait((0, self.origin))
         self.nWeight[self.origin] = 0

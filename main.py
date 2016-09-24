@@ -3,8 +3,9 @@
 
 import os, sys
 import time
+import random
 
-import matplotlib.pyplot as pp
+import matplotlib.pyplot as plt
 
 from includes.Maze import *
 
@@ -62,18 +63,72 @@ if __name__ == "__main__":
             bfs_p_time_2 = time.clock()
             print("BFS_P : " + repr(bfs_p.getResult(node)))
 
-            BFS_P_axis[int(bfs_p.getResult(node)[0])] = bfs_p_time_2 - bfs_p_time_1
             Dijkstra_axis[int(dijkstra.getResult()[0])] = dijkstra_time_2 - dijkstra_time_1
             Astar_axis[int(astar.getResult()[0])] = astar_time_2 - astar_time_1
+            BFS_P_axis[int(bfs_p.getResult(node)[0])] = bfs_p_time_2 - bfs_p_time_1
 
-    pp.title('Distance to a node from $(0,0)$')
-    pp.xlabel('Distance to the point')
-    pp.ylabel('Time of execution')
+    plt.subplot(121)
+    plt.title('Distance to a node from $(0,0)$')
+    plt.xlabel('Distance to the point (s)')
+    plt.ylabel('Time of execution')
 
-    pp.plot(X_axis, Dijkstra_axis, 'rx')
-    pp.plot(X_axis, Astar_axis, 'bs')
-    pp.plot(X_axis, BFS_P_axis, 'g^')
-    pp.show()
+    plt.plot(X_axis, Dijkstra_axis, 'rx')
+    plt.plot(X_axis, Astar_axis, 'bs')
+    plt.plot(X_axis, BFS_P_axis, 'g^')
+
+    # Distance to many nodes
+    NB = 40
+    X_axis = list(range(NB))
+    Dijkstra_axis = [None] * NB
+    Astar_axis = [None] * NB
+    BFS_P_axis = [None] * NB
+
+    # Selection
+    for n in range(NB):
+        nodes = []
+        while len(nodes) != n:
+            node = random.choice(maze.nodes)
+            if (node != origin) and (node not in nodes):
+                nodes.append(node)
+
+        # Dijkstra
+        dijkstra_time_1 = time.clock()
+        dijkstra.setOrigin(origin)
+        dijkstra.setGoal(None)
+
+        dijkstra.process()
+
+        dijkstra_time_2 = time.clock()
+
+        astar_time_1 = time.clock()
+        for k in nodes:
+            astar.setOrigin(origin)
+            astar.setGoal(k)
+
+            astar.process()
+
+        astar_time_2 = time.clock()
+
+        bfs_p_time_1 = time.clock()
+        bfs_p.setOrigin(origin)
+        bfs_p.setNodes(nodes)
+        bfs_p.process()
+        bfs_p_time_2 = time.clock()
+
+        Dijkstra_axis[n] = dijkstra_time_2 - dijkstra_time_1
+        Astar_axis[n] = astar_time_2 - astar_time_1
+        BFS_P_axis[n] = bfs_p_time_2 - bfs_p_time_1
+
+    plt.subplot(122)
+    plt.title('Distance to some nodes from $(0,0)$')
+    plt.xlabel('Number of points')
+    plt.ylabel('Time of execution')
+
+    plt.plot(X_axis, Dijkstra_axis, 'rx')
+    plt.plot(X_axis, Astar_axis, 'bs')
+    plt.plot(X_axis, BFS_P_axis, 'g^')
+
+    plt.show()
 
 
 
