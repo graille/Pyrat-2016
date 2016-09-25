@@ -39,6 +39,7 @@ if __name__ == "__main__":
             dijkstra.clear()
             bfs_p.clear()
 
+            # Init
             dijkstra.setOrigin(origin)
             dijkstra.setGoal(node)
 
@@ -48,6 +49,7 @@ if __name__ == "__main__":
             bfs_p.setOrigin(origin)
             bfs_p.setNodes([node])
 
+            # Process
             dijkstra_time_1 = time.clock()
             dijkstra.process()
             dijkstra_time_2 = time.clock()
@@ -77,7 +79,7 @@ if __name__ == "__main__":
     plt.plot(X_axis, BFS_P_axis, 'g^')
 
     # Distance to many nodes
-    NB = 40
+    NB = 30
     X_axis = list(range(NB))
     Dijkstra_axis = [None] * NB
     Astar_axis = [None] * NB

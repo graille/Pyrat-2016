@@ -50,7 +50,6 @@ class Dijkstra:
 
             for n2 in self.maze.getNeighbors(n1):
                 self.majDistance(n1, n2)
-        print(self.pathArray)
 
     def findMin(self, Q):
         m = np.inf
