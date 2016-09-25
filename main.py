@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from includes import Maze
-from includes import Rat
-from includes import Engine
+from includes.Maze import *
+from includes.Rat import *
+from includes.Engine import *
 
 TEAM_NAME = "PLS_TEAM"
 
@@ -16,23 +16,26 @@ engine = None
 maze = None
 player, opponent = None, None
 
-def preprocessing (mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed) :
+def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed):
     TOTAL_CHEESE = len(piecesOfCheese)
 
-    # Initialize objects    
+    # Initialize objects
     engine = Engine(TOTAL_CHEESE)
     maze = Maze(mazeMap)
     player = Player(playerLocation)
     opponent = Opponent(opponentLocation)
 
-def update(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
+
+def update(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese,
+           timeAllowed):
     # Update players
     player.location = playerLocation
     opponent.location = opponentLocation
 
-    # Update Engine    
+    # Update Engine
     engine.update(player, opponent)
-    
-def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
-    
+
+
+def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese,
+         timeAllowed):
     player.process(maze, opponent, piecesOfCheese)

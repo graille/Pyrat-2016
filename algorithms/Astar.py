@@ -10,13 +10,19 @@ import numpy as np
 
 
 class Astar:
-    def __init__(self, maze, origin, goal):
+    def __init__(self, maze, origin = None, goal = None):
         self.maze = maze
-        self.setOrigin(origin)
-        self.setGoal(goal)
+        self.setOrigin(origin) if origin else ()
+        self.setGoal(goal) if goal else ()
 
-    def heuristic(self, n1, n2):
-        return np.sqrt((n1[0] - n2[0]) ** 2 + (n1[1] - n2[1]) ** 2)
+        # declare self.nPredecessor
+        self.nPredecessor = cp.deepcopy(self.maze.mazeMap)
+
+        # declare self.gScore
+        self.gScore = cp.deepcopy(self.maze.mazeMap)
+
+        # declare self.fScore
+        self.fScore = cp.deepcopy(self.gScore)
 
     def setOrigin(self, n):
         self.origin = n
@@ -24,68 +30,67 @@ class Astar:
     def setGoal(self, n):
         self.goal = n
 
+    def heuristic(self, n1, n2):
+        return np.sqrt((n1[0] - n2[0]) ** 2 + (n1[1] - n2[1]) ** 2)
+
+    def clear(self):
+        for k in self.nPredecessor.keys():
+            self.nPredecessor[k] = 0
+            
+        for k in self.gScore.keys():
+            self.gScore[k] = np.inf
+            
+        for k in self.fScore.keys():
+            self.nPredecessor[k] = 0
+
     def process(self):
-        self.result = self.astar()
+        self.result = self.algorithm()
 
-    def astar(self):
-        # Initialize sets
-        closedSet = []
-        openSet = [self.origin]
+    def algorithm(self):
+        self.clear()
 
-        # declare cameFrom
-        cameFrom = cp.deepcopy(self.maze.mazeMap)
+        self.closedSet = []
+        self.openSet = [self.origin]
 
-        for k in cameFrom.keys():
-            cameFrom[k] = 0
+        self.gScore[self.origin] = 0
+        self.fScore[self.origin] = self.heuristic(self.origin, self.goal)
 
-        # declare gScore
-        gScore = cp.deepcopy(self.maze.mazeMap)
-
-        for k in gScore.keys():
-            gScore[k] = np.inf
-
-        # declare fScore
-        fScore = cp.deepcopy(gScore)
-
-        gScore[self.origin] = 0
-        fScore[self.origin] = self.heuristic(self.origin, self.goal)
-
-        while openSet:
+        while self.openSet:
             # Calculate the current node
-            current = openSet[0]
-            for node in openSet:
-                if fScore[current] > fScore[node]:
+            current = self.openSet[0]
+            for node in self.openSet:
+                if self.fScore[current] > self.fScore[node]:
                     current = node
             if current == self.goal:
-                return self.reconstruct_path(cameFrom, current)
+                return self.reconstruct_path(current)
 
-            openSet.remove(current)
-            closedSet.append(current)
+            self.openSet.remove(current)
+            self.closedSet.append(current)
 
             for neighbor in self.maze.getNeighbors(current):
-                if neighbor in closedSet:
+                if neighbor in self.closedSet:
                     continue
 
-                tentative_gScore = gScore[current] + self.maze.getDistance(current, neighbor)
+                tentative_gScore = self.gScore[current] + self.maze.getDistance(current, neighbor)
 
-                if neighbor not in openSet:
-                    openSet.append(neighbor)
+                if neighbor not in self.openSet:
+                    self.openSet.append(neighbor)
 
-                elif tentative_gScore >= gScore[neighbor]:
+                elif tentative_gScore >= self.gScore[neighbor]:
                     continue
 
-                cameFrom[neighbor] = current
-                gScore[neighbor] = tentative_gScore
-                fScore[neighbor] = gScore[neighbor] + self.heuristic(neighbor, self.goal)
+                self.nPredecessor[neighbor] = current
+                self.gScore[neighbor] = tentative_gScore
+                self.fScore[neighbor] = self.gScore[neighbor] + self.heuristic(neighbor, self.goal)
 
         return False
 
-    def reconstruct_path(self, cameFrom, current):
+    def reconstruct_path(self, current):
         total_path = ""
         total_distance = 0
         path = []
         while current != self.origin:
-            new = cameFrom[current]
+            new = self.nPredecessor[current]
 
             total_path += self.maze.getMove(new, current)
             total_distance += self.maze.getDistance(current, new)
@@ -93,3 +98,6 @@ class Astar:
             current = new
         path.append(current)
         return (total_distance, total_path[::-1])
+
+    def getResult(self):
+        return self.result
