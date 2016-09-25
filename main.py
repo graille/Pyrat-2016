@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from includes.Maze import *
 
 from algorithms.Astar import *
-from algorithms.Dijkstra import *
+from algorithms.Dijkstra_F import *
 from algorithms.FloydWarshall import *
 from algorithms.BFS_P import *
 
@@ -35,9 +35,6 @@ if __name__ == "__main__":
     for node in maze.nodes:
         if node != origin:
             print("Current Node : " + repr(node))
-            astar.clear()
-            dijkstra.clear()
-            bfs_p.clear()
 
             # Init
             dijkstra.setOrigin(origin)

@@ -8,6 +8,7 @@ Created on Fri Sep 16 18:07:45 2016
 import copy as cp
 import numpy as np
 
+from libs.FibonacciHeap import *
 
 class Dijkstra:
     def __init__(self, maze, origin = None, goal = None):
@@ -16,15 +17,9 @@ class Dijkstra:
         self.setGoal(goal) if goal else ()
 
         # Initilialize pathArray
-        self.pathArray = cp.deepcopy(self.maze.mazeMap)
-        self.dist = cp.deepcopy(self.maze.mazeMap)
-
-    def clear(self):
-        for node in self.pathArray.keys():
-            self.pathArray[node] = None
-
-        for node in self.dist.keys():
-            self.dist[node] = np.inf
+        self.prev = {}
+        self.dist = {}
+        self.entries = {}
 
     def setOrigin(self, n):
         self.origin = n
@@ -36,48 +31,44 @@ class Dijkstra:
         self.algorithm()
 
     def algorithm(self):
-        self.clear()
         self.dist[self.origin] = 0
 
-        Q = cp.copy(self.maze.nodes)
+        Q = Fibonacci_heap()
+        for n in self.maze.nodes:
+            if n != self.origin:
+                self.dist[n] = 1000
+                
+            self.prev[n] = None
+            self.entries[n] = Q.enqueue(n, self.dist[n])
 
-        while Q:
-            n1 = self.findMin(Q)
-            Q.remove(n1)
+        while len(Q) != 0:
+            n1 = Q.dequeue_min()
 
-            if self.goal and n1 == self.goal:
+            if self.goal and n1.m_elem == self.goal:
                 break
 
-            for n2 in self.maze.getNeighbors(n1):
-                self.majDistance(n1, n2)
-
-    def findMin(self, Q):
-        m = np.inf
-        s = None
-
-        for n in Q:
-            if self.dist[n] < m:
-                m = self.dist[n]
-                s = n
-
-        return s
-
-    def majDistance(self, n1, n2):
-        if self.dist[n2] > self.dist[n1] + self.maze.getDistance(n1, n2):
-            self.dist[n2] = self.dist[n1] + self.maze.getDistance(n1, n2)
-            self.pathArray[n2] = n1
+            for n2 in self.maze.getNeighbors(n1.m_elem):
+                alt = self.dist[n1.m_elem] + self.maze.getDistance(n1.m_elem, n2)
+                if alt < self.dist[n2]:
+                    self.dist[n2] = alt
+                    self.prev[n2] = n1.m_elem
+                    Q.decrease_key(self.entries[n2], alt)
 
     def reconstructPath(self):
         total_path = ""
         total_distance = 0
+        path = []
         current = self.goal
 
         while current != self.origin:
-            new = self.pathArray[current]
+            new = self.prev[current]
 
             total_path += self.maze.getMove(new, current)
             total_distance += self.maze.getDistance(current, new)
+            path.append(current)
             current = new
+
+        path.append(current)
 
         return (total_distance, total_path[::-1])
 
