@@ -67,19 +67,21 @@ class Dijkstra:
             self.dist[n2] = self.dist[n1] + self.maze.getDistance(n1, n2)
             self.pathArray[n2] = n1
 
-    def reconstructPath(self):
+    def reconstructPath(self, node):
         total_path = ""
         total_distance = 0
-        current = self.goal
+        current = node
 
         while current != self.origin:
             new = self.pathArray[current]
-
             total_path += self.maze.getMove(new, current)
             total_distance += self.maze.getDistance(current, new)
             current = new
 
         return (total_distance, total_path[::-1])
 
-    def getResult(self):
-        return self.reconstructPath()
+    def getResult(self, node = None):
+        if (not node) and (self.goal):
+            return self.reconstructPath(self.goal)
+        else:
+            return self.reconstructPath(node)
