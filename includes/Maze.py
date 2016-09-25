@@ -67,9 +67,16 @@ class Maze:
             for n2 in nodes_list:
                 result = dij.getResult(n2)
                 self.distanceMetagraph[n1][n2] = result[0]
-
                 self.pathMetagraph[n1][n2] = result[1]
 
+    def deleteFromMetagraph(self, node):
+        del self.pathMetagraph[node]
+        del self.distanceMetagraph[node]
+
+        for n in self.pathMetagraph:
+            del self.pathMetagraph[n][node]
+            del self.distanceMetagraph[n][node]
+            
     def reversePath(self, path):
         r = ""
         for l in path:
