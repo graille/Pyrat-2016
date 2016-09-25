@@ -20,7 +20,6 @@ if __name__ == "__main__":
     w,h = 15, 12
 
     maze = Maze(mazeMap, w, h)
-    origin = (0,0)
 
     astar = Astar(maze)
     dijkstra = Dijkstra(maze)
@@ -181,6 +180,13 @@ if __name__ == "__main__":
     plt.plot(X_axis, Dijkstra_axis, 'rx')
     plt.plot(X_axis, Astar_axis, 'bs')
     plt.plot(X_axis, BFS_P_axis, 'g^')
+
+
+    # Temps de calcul metagraph
+    maze.calculateMetaGraph((0,0), [(5,4), (5,8), (8,12), (9, 4), (11, 12)])
+
+    print(maze.pathMetagraph)
+    origin = (0,0)
 
     plt.show()
 
