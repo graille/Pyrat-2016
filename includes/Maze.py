@@ -7,6 +7,7 @@ Created on Thu Sep 15 22:35:55 2016
 
 from algorithms.Astar import *
 from algorithms.FloydWarshall import *
+from algorithms.Dijkstra import *
 
 import numpy as np
 
@@ -18,7 +19,6 @@ class Maze:
 
         self.NB_CASES = self.mazeWidth * self.mazeHeight
         self.nodes = list(self.getNodes())
-
 
         self.pathMatrix = None
         self.matrixMap = {}
@@ -51,13 +51,38 @@ class Maze:
                     self.matrixMap[n1][n2] = np.inf
                     self.matrixMap[n2][n1] = np.inf
 
-    def calculateMetaGraph(self, from_location, to_location_list):
+    def calculateMetaGraph(self, from_location, nodes_list):
         """Remplit les cases du dictionnaire d'adjacence et du dictionnaire de chemins pour les cases spécifiées"""
-        bfs = BFS_P(self.matrixMap, from_location, to_location_list)
-        bfs.process()
-        for to_location in to_location_list:
-            self.distanceMetagraph[from_location][to_location] = bfs.getWeight(to_location)
-            self.pathMetagraph[from_location][to_location] = bfs.getPath(to_location)
+        dij = Dijkstra(self)
+
+        for n in nodes_list:
+            self.distanceMetagraph[n] = {}
+            self.pathMetagraph[n] = {}
+
+        for n1 in nodes_list:
+            dij.setOrigin(n1)
+            dij.setGoal(None)
+            dij.process()
+
+            for n2 in nodes_list:
+                result = dij.getResult(n2)
+                self.distanceMetagraph[n1][n2] = result[0]
+
+                self.pathMetagraph[n1][n2] = result[1]
+
+    def reversePath(self, path):
+        r = ""
+        for l in path:
+            if l == 'D':
+                r += 'U'
+            if l == 'U':
+                r += 'D'
+            if l == 'R':
+                r += 'L'
+            if l == 'L':
+                r += 'R'
+
+        return r
 
     def getDistance(self, from_location, to_location):
         return self.matrixMap[from_location][to_location]
