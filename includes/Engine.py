@@ -5,9 +5,6 @@ Created on Thu Sep 15 22:41:11 2016
 @author: Thibault/Clément
 """
 
-import copy
-import time
-
 from includes.Maze import *
 from includes.Rat import *
 
@@ -36,7 +33,22 @@ class Engine:
         self.results = {}
 
     def turn(self):
-        pass
+        if not self.player.path:
+            algorithm = self.algorithms['dijkstra']
+
+            # Calculate for player
+            algorithm.setGoal(None)
+            algorithm.setOrigin(self.player.location)
+            algorithm.process()
+            
+            r = []
+            for k in self.CURRENT_CHEESES_LOCATION:
+                r.append(algorithm.getResult(k))
+
+            r.sort()
+            self.player.path = (r.pop())[1]
+
+        return self.player.path.pop()
 
     def preprocessing(self):
         pass
