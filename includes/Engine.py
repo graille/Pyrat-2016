@@ -40,7 +40,7 @@ class Engine:
             algorithm.setGoal(None)
             algorithm.setOrigin(self.player.location)
             algorithm.process()
-            
+
             r = []
             for k in self.CURRENT_CHEESES_LOCATION:
                 r.append(algorithm.getResult(k))
