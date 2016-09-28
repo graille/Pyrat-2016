@@ -353,23 +353,36 @@ class Dijkstra:
 
 mazeMap = {(0, 0) : {(0, 1) : 1}, (0, 1) : {(0, 2) : 1, (1, 1) : 1, (0, 0) : 1}, (0, 2) : {(0, 3) : 1, (1, 2) : 1, (0, 1) : 1}, (0, 3) : {(1, 3) : 1, (0, 2) : 1}, (1, 0) : {(1, 1) : 1, (2, 0) : 1}, (1, 1) : {(2, 1) : 1, (1, 0) : 1, (0, 1) : 1}, (1, 2) : {(1, 3) : 1, (0, 2) : 1, (2, 2) : 1}, (1, 3) : {(0, 3) : 1, (1, 2) : 1}, (2, 0) : {(3, 0) : 1, (1, 0) : 1}, (2, 1) : {(1, 1) : 1, (2, 2) : 1}, (2, 2) : {(2, 1) : 1, (3, 2) : 1, (1, 2) : 1, (2, 3) : 1}, (2, 3) : {(2, 2) : 1}, (3, 0) : {(3, 1) : 1, (2, 0) : 1}, (3, 1) : {(3, 0) : 1, (3, 2) : 1}, (3, 2) : {(3, 1) : 1, (3, 3) : 1, (2, 2) : 1}, (3, 3) : {(3, 2) : 1}}
 
+def trace():
+	nb_fromages_max = 7
+	timeTab = []*6
+	for k in range(1,nb_fromages_max):
+		liste = [(rd.randint(0,3), rd.randint(0,3))for i in range(k)]
+		origin = (1,0)
+		t1 = time.clock()
+		maze = Maze(mazeMap, 4, 4)
+		maze.calculateMetaGraph(origin, liste)
+		hk = HeldKalp(maze, origin, liste)
+		print(hk.process())
+		t2 = time.clock()
+		timeTab.append(np.log(t2-t1))
+		print("Elapsed time : ", t2-t1)
 
-nb_fromages_max = 7
-timeTab = []*6
-for k in range(1,nb_fromages_max):
-    liste = [(rd.randint(0,3), rd.randint(0,3))for i in range(k)]
-    origin = (1,0)
-    t1 = time.clock()
-    maze = Maze(mazeMap, 4, 4)
-    maze.calculateMetaGraph(origin, liste)
-    hk = HeldKalp(maze, origin, liste)
-    print(hk.process())
-    t2 = time.clock()
-    timeTab.append(np.log(t2-t1))
-    print("Elapsed time : ", t2-t1)
+	plt.plot(timeTab)
+	plt.show()
 
-plt.plot(timeTab)
-plt.show()
+def test(nb):
+	liste = [(rd.randint(0,3), rd.randint(0,3))for i in range(nb)]
+	origin = (0,0)
+	maze = Maze(mazeMap, 4, 4)
+	maze.calculateMetaGraph(origin, liste)
+	hk = HeldKalp(maze, origin, liste)
+	t1 = time.clock()
+	print(hk.process())
+	t2 = time.clock()
+	print("Elapsed time : ", t2-t1)
+	
+test(5)
 
 
 
