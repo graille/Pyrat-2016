@@ -40,13 +40,10 @@ class HeldKalp:
                                     cost2to3 = self.maze.distanceMetagraph[element2[-1]][element3[0]]
                                     if t_element not in cost or cost[t_element] > cost[t_element2] + cost2to3:
                                         cost[t_element] = cost[t_element2] + cost2to3
-                                        print(cost[t_element], element)
-        
-        for element in comb :
-            t_element = tuple(element)
-            if len(element) == n and costmin > cost[t_element] :
-                costmin = cost[t_element]
-                costMinElement = element
+                                        if  len(element) == n and costmin > cost[t_element] : 
+                                            print(cost[t_element], element)
+                                            costmin = cost[t_element]
+                                            costMinElement = element
         
         return costMinElement
 
