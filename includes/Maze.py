@@ -26,7 +26,6 @@ class Maze:
         self.convertToMatrix()
 
         # Metagraph
-
         self.distanceMetagraph = {} # matrice des distances du métagraph sous forme de dictionnaire
         self.pathMetagraph = {} # matrice des chemins du métagraph sous forme de dictionnaire
 

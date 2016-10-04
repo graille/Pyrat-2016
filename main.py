@@ -1,41 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from includes.Maze import *
-from includes.Rat import *
+import sys, os
+
+# Set the syspath
+f_name = "main.py"
+a_path = str(os.path.abspath(__file__))
+new_sys_entry = a_path[0:len(a_path) - len(f_name)]
+
+print("Add " + new_sys_entry + "to sys path")
+sys.path.insert(0, new_sys_entry)
+
 from includes.Engine import *
 
-TEAM_NAME = "PLS_TEAM"
-
-MOVE_DOWN = 'D'
-MOVE_LEFT = 'L'
-MOVE_RIGHT = 'R'
-MOVE_UP = 'U'
-
+# Initialize vars
+TEAM_NAME = "PLS"
 engine = None
-maze = None
-player, opponent = None, None
 
 def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed):
-    TOTAL_CHEESE = len(piecesOfCheese)
+    global engine
 
-    # Initialize objects
-    engine = Engine(TOTAL_CHEESE)
-    maze = Maze(mazeMap)
-    player = Player(playerLocation)
-    opponent = Opponent(opponentLocation)
+    # Initialize the game
+    engine = Engine(mazeMap, mazeWidth, mazeHeight)
 
+    # Update
+    engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed)
+    engine.preprocessing()
 
-def update(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese,
-           timeAllowed):
-    # Update players
-    player.location = playerLocation
-    opponent.location = opponentLocation
+def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
+    global engine
 
-    # Update Engine
-    engine.update(player, opponent)
+    # Update
+    engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
+    action = engine.turn()
 
-
-def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese,
-         timeAllowed):
-    player.process(maze, opponent, piecesOfCheese)
+    print('[' + action + ']')
+    return action

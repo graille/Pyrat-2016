@@ -11,19 +11,18 @@ import numpy as np
 
 class Dijkstra:
     def __init__(self, maze, origin = None, goal = None):
-        self.maze = maze
+        self.graph = maze
         self.setOrigin(origin) if origin else ()
         self.setGoal(goal) if goal else ()
 
-        # Initilialize pathArray
-        self.pathArray = cp.deepcopy(self.maze.mazeMap)
-        self.dist = cp.deepcopy(self.maze.mazeMap)
-
     def clear(self):
-        for node in self.pathArray.keys():
+        self.pathArray = {}
+        self.dist = {}
+
+        for node in self.graph.nodes:
             self.pathArray[node] = None
 
-        for node in self.dist.keys():
+        for node in self.graph.nodes:
             self.dist[node] = np.inf
 
     def setOrigin(self, n):
@@ -36,20 +35,23 @@ class Dijkstra:
         self.algorithm()
 
     def algorithm(self):
-        self.clear()
-        self.dist[self.origin] = 0
+        if self.origin != self.goal:
+            self.clear()
+            self.dist[self.origin] = 0
 
-        Q = cp.copy(self.maze.nodes)
+            Q = cp.copy(self.graph.nodes)
 
-        while Q:
-            n1 = self.findMin(Q)
-            Q.remove(n1)
+            while Q:
+                n1 = self.findMin(Q)
+                Q.remove(n1)
 
-            if self.goal and n1 == self.goal:
-                break
+                if self.goal and n1 == self.goal:
+                    break
 
-            for n2 in self.maze.getNeighbors(n1):
-                self.majDistance(n1, n2)
+                for n2 in self.graph.getNeighbors(n1):
+                    self.majDistance(n1, n2)
+        else:
+            pass
 
     def findMin(self, Q):
         m = np.inf
@@ -63,8 +65,8 @@ class Dijkstra:
         return s
 
     def majDistance(self, n1, n2):
-        if self.dist[n2] > self.dist[n1] + self.maze.getDistance(n1, n2):
-            self.dist[n2] = self.dist[n1] + self.maze.getDistance(n1, n2)
+        if self.dist[n2] > self.dist[n1] + self.graph.getDistance(n1, n2):
+            self.dist[n2] = self.dist[n1] + self.graph.getDistance(n1, n2)
             self.pathArray[n2] = n1
 
     def reconstructPath(self, node):
@@ -74,14 +76,17 @@ class Dijkstra:
 
         while current != self.origin:
             new = self.pathArray[current]
-            total_path += self.maze.getMove(new, current)
-            total_distance += self.maze.getDistance(current, new)
+            total_path += self.graph.getMove(new, current)
+            total_distance += self.graph.getDistance(current, new)
             current = new
 
         return (total_distance, total_path[::-1])
 
     def getResult(self, node = None):
-        if (not node) and (self.goal):
-            return self.reconstructPath(self.goal)
+        if self.goal != self.origin:
+            if (not node) and (self.goal):
+                return self.reconstructPath(self.goal)
+            else:
+                return self.reconstructPath(node)
         else:
-            return self.reconstructPath(node)
+            return (0, "")
