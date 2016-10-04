@@ -46,9 +46,13 @@ class Engine:
                 r.append(algorithm.getResult(k))
 
             r.sort()
-            self.player.path = (r.pop())[1]
+            self.player.path = (r[::-1].pop())[1]
+            print("Current cheeses" + repr(self.CURRENT_CHEESES_LOCATION))
+            print("New path for player : " + repr(self.player.path))
 
-        return self.player.path.pop()
+        way = self.player.path[0]
+        self.player.path = self.player.path[1::] if len(self.player.path) > 1 else []
+        return way
 
     def preprocessing(self):
         pass
@@ -78,7 +82,6 @@ class Engine:
 
         self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
         self.EXPLOITABLE_CHEESES = self.returnUnderValue(self.factors, self.DF_MAX, False)
-
 
     # Factors management
     def calculateFactors(self, nodes):

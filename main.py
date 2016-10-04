@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import sys, os
+
+# Set the syspath
+f_name = "main.py"
+a_path = str(os.path.abspath(__file__))
+new_sys_entry = a_path[0:len(a_path) - len(f_name)]
+
+print("Add " + new_sys_entry + "to sys path")
+sys.path.insert(0, new_sys_entry)
+
 from includes.Engine import *
-import time
 
-TEAM_NAME = "PLS RAT"
-
-MOVE_DOWN = 'D'
-MOVE_LEFT = 'L'
-MOVE_RIGHT = 'R'
-MOVE_UP = 'U'
-
+# Initialize vars
+TEAM_NAME = "PLS"
 engine = None
 
 def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed):
-    t = time.clock()
     global engine
 
     # Initialize the game
@@ -29,4 +32,7 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
 
     # Update
     engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
-    return engine.turn()
+    action = engine.turn()
+
+    print('[' + action + ']')
+    return action
