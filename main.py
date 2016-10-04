@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from includes.Maze import *
-from includes.Rat import *
 from includes.Engine import *
+import time
 
-TEAM_NAME = "PLS_TEAM"
+TEAM_NAME = "PLS RAT"
 
 MOVE_DOWN = 'D'
 MOVE_LEFT = 'L'
@@ -13,29 +12,21 @@ MOVE_RIGHT = 'R'
 MOVE_UP = 'U'
 
 engine = None
-maze = None
-player, opponent = None, None
 
 def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed):
-    TOTAL_CHEESE = len(piecesOfCheese)
+    t = time.clock()
+    global engine
 
-    # Initialize objects
-    engine = Engine(TOTAL_CHEESE)
-    maze = Maze(mazeMap)
-    player = Player(playerLocation)
-    opponent = Opponent(opponentLocation)
+    # Initialize the game
+    engine = Engine(mazeMap, mazeWidth, mazeHeight)
 
+    # Update
+    engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed)
+    engine.preprocessing()
 
-def update(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese,
-           timeAllowed):
-    # Update players
-    player.location = playerLocation
-    opponent.location = opponentLocation
+def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
+    global engine
 
-    # Update Engine
-    engine.update(player, opponent)
-
-
-def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese,
-         timeAllowed):
-    player.process(maze, opponent, piecesOfCheese)
+    # Update
+    engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
+    return engine.turn()
