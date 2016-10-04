@@ -53,7 +53,8 @@ class Maze:
     def calculateMetaGraph(self, from_location, nodes_list):
         """Remplit les cases du dictionnaire d'adjacence et du dictionnaire de chemins pour les cases spécifiées"""
         dij = Dijkstra(self)
-
+        nodes_list = nodes_list.copy() # Pour ne pas modifier la liste originale
+        nodes_list.append(from_location)
         for n in nodes_list:
             self.distanceMetagraph[n] = {}
             self.pathMetagraph[n] = {}
