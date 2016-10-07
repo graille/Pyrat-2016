@@ -70,6 +70,7 @@ class Fourmis:
                     maxPheromonesToPathIndex = j
             orderedVisitList.append(toVisitList[maxPheromonesToPathIndex])
             toVisitList.pop(maxPheromonesToPathIndex)
+        orderedVisitList.pop(0) #On retire le fromLocation du début
         return orderedVisitList
 
 

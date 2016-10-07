@@ -454,7 +454,7 @@ def test(nb):
     origin = (0,0)
     maze = Maze(mazeMap, 4, 4)
     maze.calculateMetaGraph(origin, liste)
-    ants = Fourmis(maze, origin, liste, pheromonesTime = 30, antNumber = 200, pheromonesMax = 100)
+    ants = Fourmis(maze, origin, liste, pheromonesTime = 10, antNumber = 300, pheromonesMax = 200)
     t1 = time.clock()
     print(ants.process())
     t2 = time.clock()
