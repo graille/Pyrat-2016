@@ -11,55 +11,54 @@ class Fourmis:
         self.locationNumber = len(self.locationList)
         self.fromLocation = fromLocation
         self.antNumber = antNumber
-        self.pheromonesDico = {location : {[0]*pheromonesTime for location in self.locationList} for location in self.locationList}
+        self.pheromonesDico = {fLocation : {tLocation : [int(pheromonesMax*5/pheromonesTime)]*pheromonesTime for tLocation in [self.fromLocation]+self.locationList} for fLocation in [self.fromLocation]+self.locationList}
         self.pheromonesMax = pheromonesMax
 
     def process(self):
         for i in range(self.antNumber):
-            locationList = self.locationList #On copie la liste pour pouvoir la modifier
+            locationList = self.locationList.copy() #On copie la liste pour pouvoir la modifier
             distanceSum = 0
             n = len(locationList)
             currentLocation = self.fromLocation
             while n > 0:
-                (case, pheromones) = self.weightedChoice(locationList, pheromonesDico)
+                (case, pheromones) = self.weightedChoice(locationList, currentLocation)
                 n-=1
                 self.pheromonesDico[currentLocation][case][-1] += self.partiePositive(self.pheromonesMax - distanceSum)
-                distanceSum += self.distances[self.currentLocation][case]
+                distanceSum += self.distances[currentLocation][case]
                 #On passe à la case suivante
                 currentLocation = case
                 self.decalerPheromones()
         return self.retournerCheminOpt()
     
 
-    def weightedChoice(self, list, weightDico):
+    def weightedChoice(self, list, currentLocation):
         """Fait un tirage au sort sans remise en affectant les poids, retourne l'élément choisi et son poids"""
         n = len(list)
         weightedList = []
         for elt in list:
-            for j in range(weightDico[elt]):
+            for j in range(self.getPheromonesPath(currentLocation, elt)):
                 weightedList.append(elt)
         choicedElement = rd.choice(weightedList)
-        indexElt = list.index(choicedElement)
-        list.remove(indexElt)
-        choicedElementweight = weightDico[choicedElement]
+        list.remove(choicedElement)
+        choicedElementweight = self.getPheromonesPath(currentLocation, choicedElement)
         return (choicedElement, choicedElementweight)
 
     def getPheromonesPath(self, fromLocation, toLocation):
         res = 0
-        for pheromones in pheromonesDico[fromLocation][toLocation]:
-            res+=pheromones[fromLocation][toLocation]
+        for pheromones in self.pheromonesDico[fromLocation][toLocation]:
+            res+=pheromones
         return res
 
-    def decalerPheromones():
+    def decalerPheromones(self):
         """Retire un cycle de vie aux phéromones"""
         for fromLocation in self.locationList :
             for toLocation in self.locationList :
-                n = self.pheromones[fromLocation][toLocation]
-                self.pheromones[fromLocation][toLocation] = self.pheromones[fromLocation][toLocation][1:n]
-                self.pheromones[fromLocation][toLocation].append(0)
+                n = self.pheromonesDico[fromLocation][toLocation]
+                self.pheromonesDico[fromLocation][toLocation].pop(0)
+                self.pheromonesDico[fromLocation][toLocation].append(1)
 
-    def retournerCheminOpt():
-        toVisitList = self.locationList
+    def retournerCheminOpt(self):
+        toVisitList = self.locationList.copy()
         orderedVisitList = [self.fromLocation]
         for i in range(self.locationNumber):
             maxPheromones = np.inf
@@ -70,7 +69,7 @@ class Fourmis:
                     maxPheromones = currentPheromones
                     maxPheromonesToPathIndex = j
             orderedVisitList.append(toVisitList[maxPheromonesToPathIndex])
-            toVisitList.remove(maxPheromonesToPathIndex)
+            toVisitList.pop(maxPheromonesToPathIndex)
         return orderedVisitList
 
 
