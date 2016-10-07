@@ -50,11 +50,12 @@ class Maze:
                     self.matrixMap[n1][n2] = np.inf
                     self.matrixMap[n2][n1] = np.inf
 
-    def calculateMetaGraph(self, from_location, nodes_list):
+    def calculateMetaGraph(self, player, nodes_list):
         """Remplit les cases du dictionnaire d'adjacence et du dictionnaire de chemins pour les cases spécifiées"""
         dij = Dijkstra(self)
         nodes_list = nodes_list.copy() # Pour ne pas modifier la liste originale
-        nodes_list.append(from_location)
+        nodes_list.append(player.location)
+
         for n in nodes_list:
             self.distanceMetagraph[n] = {}
             self.pathMetagraph[n] = {}
@@ -69,14 +70,6 @@ class Maze:
                 self.distanceMetagraph[n1][n2] = result[0]
                 self.pathMetagraph[n1][n2] = result[1]
 
-    def deleteFromMetagraph(self, node):
-        del self.pathMetagraph[node]
-        del self.distanceMetagraph[node]
-
-        for n in self.pathMetagraph:
-            del self.pathMetagraph[n][node]
-            del self.distanceMetagraph[n][node]
-            
     def reversePath(self, path):
         r = ""
         for l in path:
@@ -97,7 +90,7 @@ class Maze:
     def getNodes(self):
         return self.mazeMap.keys()
 
-    def findMostRapidWay(self, origin, goal):
+    def fastestPathToNode(self, origin, goal):
         al = Astar(self, origin, goal)
         al.process()
 

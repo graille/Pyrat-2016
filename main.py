@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys, os
+import os
+import sys
 
 # Set the syspath
 f_name = "main.py"
@@ -11,7 +12,7 @@ new_sys_entry = a_path[0:len(a_path) - len(f_name)]
 print("Add " + new_sys_entry + "to sys path")
 sys.path.insert(0, new_sys_entry)
 
-from includes.Engine import *
+from process.Engine import *
 
 # Initialize vars
 TEAM_NAME = "PLS"

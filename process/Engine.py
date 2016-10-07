@@ -11,6 +11,18 @@ from includes.Rat import *
 from algorithms.Dijkstra import *
 from algorithms.Astar import *
 
+class AlgorithmsList:
+    def __init__(self, maze):
+        self.algorithms = {}
+        self.initAlgorithms(maze)
+
+    def initAlgorithms(self, maze):
+        self.algorithms['dijkstra'] = Dijkstra(maze)
+        self.algorithms['astar'] = Astar(maze)
+
+    def get(self, name):
+        return self.algorithms[name]
+
 class Engine:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
         # Cache maze
@@ -25,16 +37,11 @@ class Engine:
         self.opponent = None
 
         # Init algorithms
-        self.algorithms = {}
-
-        self.algorithms['dijkstra'] = Dijkstra(self.maze)
-        self.algorithms['astar'] = Astar(self.maze)
-
-        self.results = {}
+        self.algorithms = AlgorithmsList()
 
     def turn(self):
         if not self.player.path:
-            algorithm = self.algorithms['dijkstra']
+            algorithm = self.algorithms.get('dijkstra')
 
             # Calculate for player
             algorithm.setGoal(None)
@@ -85,7 +92,7 @@ class Engine:
 
     # Factors management
     def calculateFactors(self, nodes):
-        algorithm = self.algorithms['dijkstra']
+        algorithm = self.algorithms.get('dijkstra')
 
         # Calculate for player
         algorithm.setGoal(None)
