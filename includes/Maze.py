@@ -4,12 +4,12 @@ Created on Thu Sep 15 22:35:55 2016
 
 @author: Thibault/Clément
 """
+import numpy as np
 
+# Import algorithms
 from algorithms.Astar import *
 from algorithms.FloydWarshall import *
 from algorithms.Dijkstra import *
-
-import numpy as np
 
 class Maze:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
@@ -18,14 +18,12 @@ class Maze:
         self.mazeHeight = mazeHeight
 
         self.NB_CASES = self.mazeWidth * self.mazeHeight
-        self.nodes = list(self.getNodes())
+        self.nodes = list(self.mazeMap.keys())
 
-        self.pathMatrix = None
+        # Init matrixMap
         self.matrixMap = {}
 
-        self.convertToMatrix()
-
-        # Metagraph
+        # Init metagraph
         self.distanceMetagraph = {} # matrice des distances du métagraph sous forme de dictionnaire
         self.pathMetagraph = {} # matrice des chemins du métagraph sous forme de dictionnaire
 
@@ -50,27 +48,12 @@ class Maze:
                     self.matrixMap[n1][n2] = np.inf
                     self.matrixMap[n2][n1] = np.inf
 
-    def calculateMetaGraph(self, player, nodes_list):
-        """Remplit les cases du dictionnaire d'adjacence et du dictionnaire de chemins pour les cases spécifiées"""
-        dij = Dijkstra(self)
-        nodes_list = nodes_list.copy() # Pour ne pas modifier la liste originale
-        nodes_list.append(player.location)
-
-        for n in nodes_list:
-            self.distanceMetagraph[n] = {}
-            self.pathMetagraph[n] = {}
-
-        for n1 in nodes_list:
-            dij.setOrigin(n1)
-            dij.setGoal(None)
-            dij.process()
-
-            for n2 in nodes_list:
-                result = dij.getResult(n2)
-                self.distanceMetagraph[n1][n2] = result[0]
-                self.pathMetagraph[n1][n2] = result[1]
-
     def reversePath(self, path):
+        """
+        Inverse un chemin symétriquement par rapport a la diagonale
+        :param path:
+        :return:
+        """
         r = ""
         for l in path:
             if l == 'D':
@@ -85,18 +68,19 @@ class Maze:
         return r
 
     def getDistance(self, from_location, to_location):
-        return self.matrixMap[from_location][to_location]
-
-    def getNodes(self):
-        return self.mazeMap.keys()
-
-    def fastestPathToNode(self, origin, goal):
-        al = Astar(self, origin, goal)
-        al.process()
-
-        return al.result
+        try:
+            return self.mazeMap[from_location][to_location]
+        except KeyError:
+            return np.inf
 
     def getMove(self, origin, goal):
+        """
+        Retourne le mouvement à effectuer pour aller de origin à goal,
+        qui doivent être adjacentes
+        :param origin:
+        :param goal:
+        :return: bool
+        """
         if origin != goal:
             i1,j1 = origin
             i2,j2 = goal

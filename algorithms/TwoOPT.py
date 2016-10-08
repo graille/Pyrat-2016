@@ -2,21 +2,36 @@
 # -*- coding: utf-8 -*-
 
 class TwoOPT:
-    def __init__(self, maze, origin, goals):
+    def __init__(self, maze, origin = None, goals = None):
         self.maze = maze
-        self.origin = origin
+        self.origin = origin if origin else ()
+        self.goals = goals if goals else ()
 
-        self.goals = goals
         self.NB_OF_NODES = len(goals) + 1
 
+    def setOrigin(self, origin):
+        self.origin = origin
+
+    def setGoals(self, goals):
+        self.goals = goals
+
     def calculateFirstPath(self):
+        """
+        Create a naive path
+        """
         self.path = [self.origin]
 
         for n in self.goals:
             if n not in self.path:
                 self.path.append(n)
 
+    def process(self):
+        self.algorithm()
+
     def algorithm(self):
+        """
+        Calculate a path with the 2-opt algorithm
+        """
         improve = True
         while improve:
             improve = False
@@ -46,5 +61,10 @@ class TwoOPT:
         return self.maze.distanceMetagraph[self.path[i % self.NB_OF_NODES]][self.path[j % self.NB_OF_NODES]]
 
     def exchange(self, i, j):
+        """
+        Echange deux arrêtes
+        :param i: arrete partant de i
+        :param j: arrete partant de j
+        """
         for k in range(round((i - j)/2)):
-            self.path[(i + k + 1) % self.NB_OF_NODES], self.path[j - k] = self.path[j -k ], self.path[(i + 1 + k) % self.NB_OF_NODES]
+            self.path[(i + k + 1) % self.NB_OF_NODES], self.path[j - k] = self.path[j - k], self.path[(i + 1 + k) % self.NB_OF_NODES]

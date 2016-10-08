@@ -15,6 +15,12 @@ class Dijkstra:
         self.setOrigin(origin) if origin else ()
         self.setGoal(goal) if goal else ()
 
+    def setOrigin(self, n):
+        self.origin = n
+
+    def setGoal(self, n):
+        self.goal = n
+
     def clear(self):
         self.pathArray = {}
         self.dist = {}
@@ -24,12 +30,6 @@ class Dijkstra:
 
         for node in self.graph.nodes:
             self.dist[node] = np.inf
-
-    def setOrigin(self, n):
-        self.origin = n
-
-    def setGoal(self, n):
-        self.goal = n
 
     def process(self):
         self.algorithm()
