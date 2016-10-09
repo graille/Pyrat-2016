@@ -11,6 +11,7 @@ from includes.Rat import *
 # Import algorithms
 from algorithms.Dijkstra import *
 from algorithms.Astar import *
+from algorithms.TwoOPT import *
 
 # Import enumrations
 from process.Enums import *
@@ -26,6 +27,7 @@ class AlgorithmsList:
     def initAlgorithms(self):
         self.algorithms['dijkstra'] = Dijkstra(self.maze)
         self.algorithms['astar'] = Astar(self.maze)
+        self.algorithms['twoopt'] = TwoOPT(self.maze)
 
     def get(self, name):
         return self.algorithms[name]
@@ -65,6 +67,8 @@ class MazeController:
         # Initiliaze cells for player location
         self.maze.distanceMetagraph[GameEnum.LOCATION_LABEL] = {}
         self.maze.pathMetagraph[GameEnum.LOCATION_LABEL] = {}
+        self.maze.distanceMetagraph[GameEnum.LOCATION_LABEL][GameEnum.LOCATION_LABEL] = 0
+        self.maze.pathMetagraph[GameEnum.LOCATION_LABEL][GameEnum.LOCATION_LABEL] = ""
 
         for n1 in nodes_list:
             self.maze.distanceMetagraph[n1] = {}

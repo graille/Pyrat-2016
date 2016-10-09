@@ -20,7 +20,6 @@ TEAM_NAME = "Paul La Souris"
 engine = None
 
 def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed):
-    t = time.clock()
     global engine
 
     # Initialize the game
@@ -29,16 +28,27 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     # Update
     engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed, True)
 
-    print(time.clock() - t)
     print('Maze Map : ' + repr(engine.maze.mazeMap))
-    print("")
-    #print('Matrix Map : ' + repr(engine.maze.matrixMap))
     print("")
 
     print('Path Meta Map : ' + repr(engine.maze.pathMetagraph))
     print("")
     print('Distance Meta Map : ' + repr(engine.maze.distanceMetagraph))
     print("")
+
+    import random
+    engine.player.location = (random.randint(0,11), random.randint(0,14))
+
+    engine.mazeController.updateMetaGraph(engine.player, piecesOfCheese)
+    print("2-OPT Test")
+    to = engine.algorithms.get('twoopt')
+
+    to.setOrigin(GameEnum.LOCATION_LABEL)
+    to.setGoals(piecesOfCheese)
+    to.process()
+
+    print("Final path" + repr(to.getResult()))
+
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
     global engine
