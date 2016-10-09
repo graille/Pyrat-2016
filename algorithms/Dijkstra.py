@@ -43,10 +43,7 @@ class Dijkstra:
 
             while Q:
                 n1 = self.findMin(Q)
-                try:
-                    Q.remove(n1)
-                except ValueError:
-                    print ("ValueError : " + repr(n1))
+                Q.remove(n1)
 
                 if self.goal and n1 == self.goal:
                     break

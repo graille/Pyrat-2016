@@ -37,17 +37,30 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     print("")
 
     import random
-    engine.player.location = (random.randint(0,11), random.randint(0,14))
-
-    engine.mazeController.updateMetaGraph(engine.player, piecesOfCheese)
     print("2-OPT Test")
-    to = engine.algorithms.get('twoopt')
 
-    to.setOrigin(GameEnum.LOCATION_LABEL)
-    to.setGoals(piecesOfCheese)
-    to.process()
+    for k in range(1000):
+        t = time.clock()
+        engine.player.location = (random.randint(0,11), random.randint(0,14))
+        engine.mazeController.updateMetaGraph(engine.player, piecesOfCheese)
 
-    print("Final path" + repr(to.getResult()))
+        to = engine.algorithms.get('twoopt')
+
+        to.setOrigin(GameEnum.LOCATION_LABEL)
+        to.setGoals(piecesOfCheese)
+        to.setImprove(True)
+        to.process()
+
+        r1 = to.getResult()[0]
+
+        to.setOrigin(GameEnum.LOCATION_LABEL)
+        to.setGoals(piecesOfCheese)
+        to.setImprove(False)
+        to.process()
+
+        r2 = to.getResult()[0]
+
+        print(str(r1) + " " + str(r2) + " " + str(r2 - r1) + " : " + str(time.clock() - t))
 
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
