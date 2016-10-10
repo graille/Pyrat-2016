@@ -16,6 +16,8 @@ from algorithms.TwoOPT import *
 # Import enumrations
 from process.Enums import *
 
+# Debug
+from debug.Debug import *
 
 class AlgorithmsList:
     def __init__(self, maze):
@@ -126,6 +128,10 @@ class Engine:
         self.player = None
         self.opponent = None
 
+
+        # Debug
+        self.debuguer = Debug(self)
+
     def turn(self):
         if not self.player.path:
             algorithm = self.algorithms.get('dijkstra')
@@ -160,6 +166,7 @@ class Engine:
 
             # Get the total number of cheeses
             self.TOTAL_CHEESES = len(piecesOfCheese)
+            self.INITIAL_CHEESES = piecesOfCheese
 
         # Miscellaneous
         self.CURRENT_CHEESES_NB = len(piecesOfCheese)

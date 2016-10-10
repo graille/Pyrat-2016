@@ -71,7 +71,10 @@ class Maze:
         try:
             return self.mazeMap[from_location][to_location]
         except KeyError:
-            return np.inf
+            if to_location == from_location:
+                return 0
+            else:
+                return np.inf
 
     def getMove(self, origin, goal):
         """
@@ -100,3 +103,17 @@ class Maze:
 
     def getNeighbors(self, position):
         return self.mazeMap[position].keys()
+
+    def convertMetaPathToRealPaths(self, pathMeta):
+        path = []
+        for k in range(len(pathMeta) - 1):
+            path.append(self.pathMetagraph[pathMeta[k]][pathMeta[k+1]])
+
+        return path
+
+    def concatPaths(self, paths):
+        r = ""
+        for path in paths:
+            r += path
+
+        return r

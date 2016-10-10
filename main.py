@@ -15,6 +15,9 @@ sys.path.insert(0, new_sys_entry)
 
 from process.Engine import *
 
+# Debug
+from debug.Debug import *
+
 # Initialize vars
 TEAM_NAME = "Paul La Souris"
 engine = None
@@ -28,39 +31,25 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     # Update
     engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed, True)
 
-    print('Maze Map : ' + repr(engine.maze.mazeMap))
-    print("")
+    # Debug
+    debuguer = Debug(engine)
 
-    print('Path Meta Map : ' + repr(engine.maze.pathMetagraph))
-    print("")
-    print('Distance Meta Map : ' + repr(engine.maze.distanceMetagraph))
-    print("")
+    # generate Path
+    # Path 1
+    to = engine.algorithms.get('twoopt')
+    to.setOrigin(GameEnum.LOCATION_LABEL)
+    to.setGoals(piecesOfCheese)
+    to.setImprove(True)
+    to.process()
 
-    import random
-    print("2-OPT Test")
+    path1 = to.getResult()[1]
+    print("Path  1: " + repr(path1))
 
-    for k in range(1000):
-        t = time.clock()
-        engine.player.location = (random.randint(0,11), random.randint(0,14))
-        engine.mazeController.updateMetaGraph(engine.player, piecesOfCheese)
+    #Path 2
+    path2 = [(3, 8), (5, 8), (10, 11), (9, 13), (11, 12), (9, 7), (8, 4), (4, 3)]
+    print("Path  2: " + repr(path2))
 
-        to = engine.algorithms.get('twoopt')
-
-        to.setOrigin(GameEnum.LOCATION_LABEL)
-        to.setGoals(piecesOfCheese)
-        to.setImprove(True)
-        to.process()
-
-        r1 = to.getResult()[0]
-
-        to.setOrigin(GameEnum.LOCATION_LABEL)
-        to.setGoals(piecesOfCheese)
-        to.setImprove(False)
-        to.process()
-
-        r2 = to.getResult()[0]
-
-        print(str(r1) + " " + str(r2) + " " + str(r2 - r1) + " : " + str(time.clock() - t))
+    debuguer.showMetaPaths([playerLocation, opponentLocation], [path1, path2])
 
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
