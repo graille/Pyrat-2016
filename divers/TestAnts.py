@@ -99,46 +99,6 @@ class Astar:
         return self.result
 
 
-
-class HeldKalp:
-    def __init__(self, maze, from_location, locationList):
-        """Prend la liste des cases a visiter"""
-        self.maze = maze
-        self.locationList = locationList
-        self.from_location = from_location
-
-    def process(self):
-        comb = self.combinaisons(self.locationList)
-        n = len(self.locationList)
-        #init
-        cost = {}
-        for location in self.locationList :
-            cost[tuple([(location)])] = self.maze.distanceMetagraph[self.from_location][location]
-        
-        costmin = np.inf
-        costMinElement = None
-        for i in range(2,n+1): #On travaille dans un nombre de points croissants
-            for element in comb :
-                if len(element) == i :
-                    t_element = tuple(element)
-                    for element3 in comb :
-                        if len(element3) == 1 :
-                            for element2 in comb :
-                                if element2+element3 == element :
-                                    t_element2 = tuple(element2)
-                                    cost2to3 = self.maze.distanceMetagraph[element2[-1]][element3[0]]
-                                    if t_element not in cost or cost[t_element] > cost[t_element2] + cost2to3:
-                                        cost[t_element] = cost[t_element2] + cost2to3
-                                        if  len(element) == n and costmin > cost[t_element] : 
-                                            print(cost[t_element], element)
-                                            costmin = cost[t_element]
-                                            costMinElement = element
-        
-        return costMinElement
-
-
-
-
     def combinaisons(self, list):
         n = len(list)
         res = []
@@ -348,34 +308,155 @@ class Dijkstra:
             return self.reconstructPath(node)
 
 
+
+
+#----------------------------------------------
+
+class Fourmis:
+    def __init__(self, maze, fromLocation, locationList, pheromonesTime = 300, antNumber = 200, pheromonesMax = 100):
+        """Prend la liste des cases a visiter"""
+        self.maze = maze
+        self.distances = self.maze.distanceMetagraph
+        self.pheromonesTime = pheromonesTime
+        self.locationList = locationList
+        self.locationNumber = len(self.locationList)
+        self.fromLocation = fromLocation
+        self.antNumber = antNumber
+        self.pheromonesDico = {fLocation : {tLocation : [int(pheromonesMax*5/pheromonesTime)]*pheromonesTime for tLocation in [self.fromLocation]+self.locationList} for fLocation in [self.fromLocation]+self.locationList}
+        self.pheromonesMax = pheromonesMax
+
+    def process(self):
+        for i in range(self.antNumber):
+            locationList = self.locationList.copy() #On copie la liste pour pouvoir la modifier
+            distanceSum = 0
+            n = len(locationList)
+            currentLocation = self.fromLocation
+            while n > 0:
+                (case, pheromones) = self.weightedChoice(locationList, currentLocation)
+                n-=1
+                self.pheromonesDico[currentLocation][case][-1] += self.partiePositive(self.pheromonesMax - distanceSum)
+                distanceSum += self.distances[currentLocation][case]
+                #On passe à la case suivante
+                currentLocation = case
+                self.decalerPheromones()
+        return self.retournerCheminOpt()
+    
+
+    def weightedChoice(self, list, currentLocation):
+        """Fait un tirage au sort sans remise en affectant les poids, retourne l'élément choisi et son poids"""
+        n = len(list)
+        weightedList = []
+        for elt in list:
+            for j in range(self.getPheromonesPath(currentLocation, elt)):
+                weightedList.append(elt)
+        choicedElement = rd.choice(weightedList)
+        list.remove(choicedElement)
+        choicedElementweight = self.getPheromonesPath(currentLocation, choicedElement)
+        return (choicedElement, choicedElementweight)
+
+    def getPheromonesPath(self, fromLocation, toLocation):
+        res = 0
+        for pheromones in self.pheromonesDico[fromLocation][toLocation]:
+            res+=pheromones
+        return res
+
+    def decalerPheromones(self):
+        """Retire un cycle de vie aux phéromones"""
+        for fromLocation in self.locationList :
+            for toLocation in self.locationList :
+                n = self.pheromonesDico[fromLocation][toLocation]
+                self.pheromonesDico[fromLocation][toLocation].pop(0)
+                self.pheromonesDico[fromLocation][toLocation].append(1)
+
+    def retournerCheminOpt(self):
+        toVisitList = self.locationList.copy()
+        orderedVisitList = [self.fromLocation]
+        for i in range(self.locationNumber):
+            maxPheromones = np.inf
+            maxPheromonesToPathIndex = None
+            for j in range(len(toVisitList)):
+                currentPheromones = self.getPheromonesPath(orderedVisitList[i],toVisitList[j])
+                if currentPheromones < maxPheromones :
+                    maxPheromones = currentPheromones
+                    maxPheromonesToPathIndex = j
+            orderedVisitList.append(toVisitList[maxPheromonesToPathIndex])
+            toVisitList.pop(maxPheromonesToPathIndex)
+        return orderedVisitList
+
+
+    def partiePositive(self, x):
+        if x <= 0:
+            return 0
+        else:
+            return x
+
+
+#----------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 mazeMap = {(0, 0) : {(0, 1) : 1}, (0, 1) : {(0, 2) : 1, (1, 1) : 1, (0, 0) : 1}, (0, 2) : {(0, 3) : 1, (1, 2) : 1, (0, 1) : 1}, (0, 3) : {(1, 3) : 1, (0, 2) : 1}, (1, 0) : {(1, 1) : 1, (2, 0) : 1}, (1, 1) : {(2, 1) : 1, (1, 0) : 1, (0, 1) : 1}, (1, 2) : {(1, 3) : 1, (0, 2) : 1, (2, 2) : 1}, (1, 3) : {(0, 3) : 1, (1, 2) : 1}, (2, 0) : {(3, 0) : 1, (1, 0) : 1}, (2, 1) : {(1, 1) : 1, (2, 2) : 1}, (2, 2) : {(2, 1) : 1, (3, 2) : 1, (1, 2) : 1, (2, 3) : 1}, (2, 3) : {(2, 2) : 1}, (3, 0) : {(3, 1) : 1, (2, 0) : 1}, (3, 1) : {(3, 0) : 1, (3, 2) : 1}, (3, 2) : {(3, 1) : 1, (3, 3) : 1, (2, 2) : 1}, (3, 3) : {(3, 2) : 1}}
 
 def trace():
-	nb_fromages_max = 7
-	timeTab = []*6
-	for k in range(1,nb_fromages_max):
-		liste = [(rd.randint(0,3), rd.randint(0,3))for i in range(k)]
-		origin = (1,0)
-		t1 = time.clock()
-		maze = Maze(mazeMap, 4, 4)
-		maze.calculateMetaGraph(origin, liste)
-		hk = HeldKalp(maze, origin, liste)
-		print(hk.process())
-		t2 = time.clock()
-		timeTab.append(np.log(t2-t1))
-		print("Elapsed time : ", t2-t1)
+    nb_fromages_max = 7
+    timeTab = []*6
+    for k in range(1,nb_fromages_max):
+        liste = [(rd.randint(0,3), rd.randint(0,3))for i in range(k)]
+        origin = (1,0)
+        t1 = time.clock()
+        maze = Maze(mazeMap, 4, 4)
+        maze.calculateMetaGraph(origin, liste)
+        hk = HeldKalp(maze, origin, liste)
+        print(hk.process())
+        t2 = time.clock()
+        timeTab.append(np.log(t2-t1))
+        print("Elapsed time : ", t2-t1)
 
-	plt.plot(timeTab)
-	plt.show()
+    plt.plot(timeTab)
+    plt.show()
 
 def test(nb):
     liste = [(rd.randint(0,3), rd.randint(0,3))for i in range(nb)]
+    print(liste)
     origin = (0,0)
     maze = Maze(mazeMap, 4, 4)
     maze.calculateMetaGraph(origin, liste)
-    hk = HeldKalp(maze, origin, liste)
+    ants = Fourmis(maze, origin, liste, pheromonesTime = 10, antNumber = 300, pheromonesMax = 200)
     t1 = time.clock()
-    print(hk.process())
+    print(ants.process())
     t2 = time.clock()
     print("Elapsed time : ", t2-t1)
 	
