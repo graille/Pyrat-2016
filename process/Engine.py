@@ -128,10 +128,6 @@ class Engine:
         self.player = None
         self.opponent = None
 
-
-        # Debug
-        self.debuguer = Debug(self)
-
     def turn(self):
         if not self.player.path:
             algorithm = self.algorithms.get('dijkstra')

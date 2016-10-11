@@ -34,22 +34,7 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     # Debug
     debuguer = Debug(engine)
 
-    # generate Path
-    # Path 1
-    to = engine.algorithms.get('twoopt')
-    to.setOrigin(GameEnum.LOCATION_LABEL)
-    to.setGoals(piecesOfCheese)
-    to.setImprove(True)
-    to.process()
-
-    path1 = to.getResult()[1]
-    print("Path  1: " + repr(path1))
-
-    #Path 2
-    path2 = [(3, 8), (5, 8), (10, 11), (9, 13), (11, 12), (9, 7), (8, 4), (4, 3)]
-    print("Path  2: " + repr(path2))
-
-    debuguer.showMetaPaths([playerLocation, opponentLocation], [path1, path2])
+    debuguer.showPath([(11, 0), (10, 0), (9, 0), (9, 1), (8, 1), (8, 2)])
 
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):

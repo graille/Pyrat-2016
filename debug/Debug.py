@@ -15,36 +15,32 @@ class Debug:
         self.PATH_COLOR = ['red', 'grey', 'green', 'blue']
         self.CURRENT_PATH_COLOR = 0
 
-    def showPath(self, origin, path):
-        mg = MazeGenerator(self.maze)
-        mg.generate()
-        mg.showNodes(self.engine.INITIAL_CHEESES)
+    def showPath(self, *args):
+        mg = self.getMG()
 
-        mg.showPath(origin, path)
+        if len(args) == 2:
+            mg.showPath(args[0], args[1])
+        elif len(args) == 1:
+            mg.showPath(args[0])
+
         mg.show()
 
-    def showMetaPath(self, origin, path):
-        mg = MazeGenerator(self.maze)
-        mg.generate()
-        mg.showNodes(self.engine.INITIAL_CHEESES)
+    def showMetaPath(self, path):
+        origin = path[0]
+        paths = self.maze.convertMetaPathToRealPaths(path)
 
-        path = self.maze.convertMetaPathToRealPaths(path)
+        mg = self.getMG()
 
-        mg.showPaths(origin, path)
-        mg.show()
-
-    def showMetaPaths(self, origins, paths):
-        mg = MazeGenerator(self.maze)
-        mg.generate()
-        mg.showNodes(self.engine.INITIAL_CHEESES)
-
-        k = 0
+        size = 10
+        current = origin
         for path in paths:
-            origin = origins[k]
-            path = self.maze.convertMetaPathToRealPaths(path)
-            mg.showPaths(origin, path, self.PATH_COLOR[self.CURRENT_PATH_COLOR])
-            self.CURRENT_PATH_COLOR = (self.CURRENT_PATH_COLOR + 1) % len(self.PATH_COLOR)
-            k += 1
+            current = mg.showPath(current, path, size=size, color='red')
+            size += 1
 
-        self.CURRENT_PATH_COLOR = 0
         mg.show()
+
+    def getMG(self):
+        mg = MazeGenerator(self.maze.mazeMap, self.maze.mazeWidth, self.maze.mazeHeight)
+        mg.showNodes(self.engine.INITIAL_CHEESES)
+
+        return mg
