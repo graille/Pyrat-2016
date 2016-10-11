@@ -31,11 +31,6 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     # Update
     engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed, True)
 
-    # Debug
-    debuguer = Debug(engine)
-
-    debuguer.showPath([(11, 0), (10, 0), (9, 0), (9, 1), (8, 1), (8, 2)])
-
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
     global engine

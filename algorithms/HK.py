@@ -9,7 +9,7 @@ Held-Kald Algorithm
 
 import numpy as np
 import itertools as it
-from Astar import *
+from algorithms.Astar import *
 
 class HeldKalp:
     def __init__(self, maze, from_location, locationList):
@@ -41,7 +41,6 @@ class HeldKalp:
                                     if t_element not in cost or cost[t_element] > cost[t_element2] + cost2to3:
                                         cost[t_element] = cost[t_element2] + cost2to3
                                         if  len(element) == n and costmin > cost[t_element] : 
-                                            print(cost[t_element], element)
                                             costmin = cost[t_element]
                                             costMinElement = element
         
