@@ -20,7 +20,10 @@ class HeldKalp:
 
     def process(self):
         comb = self.combinaisons(self.locationList)
+        comb_tab = comb[0]
+        comb_tuple = comb[1]
         n = len(self.locationList)
+        n_comb = len(comb_tab)
         #init
         cost = {}
         for location in self.locationList :
@@ -29,21 +32,23 @@ class HeldKalp:
         costmin = np.inf
         costMinElement = None
         for i in range(2,n+1): #On travaille dans un nombre de points croissants
-            for element in comb :
+            for index in range(n_comb) :
+                element = comb_tab[index]
                 if len(element) == i :
-                    t_element = tuple(element)
-                    for element3 in comb :
+                    for index3 in range(n_comb) :
+                        element3 = comb_tab[index3]
                         if len(element3) == 1 :
-                            for element2 in comb :
+                            for index2 in range(n_comb) :
+                                element2 = comb_tab[index2]
                                 if element2+element3 == element :
-                                    t_element2 = tuple(element2)
                                     cost2to3 = self.maze.distanceMetagraph[element2[-1]][element3[0]]
+                                    t_element = comb_tuple[index]
+                                    t_element2 = comb_tuple[index2]
                                     if t_element not in cost or cost[t_element] > cost[t_element2] + cost2to3:
                                         cost[t_element] = cost[t_element2] + cost2to3
                                         if  len(element) == n and costmin > cost[t_element] : 
                                             costmin = cost[t_element]
                                             costMinElement = element
-        
         return costMinElement
 
 
@@ -51,7 +56,7 @@ class HeldKalp:
 
     def combinaisons(self, list):
         n = len(list)
-        res = []
+        res = [[],[]]
         for i in range(1<<n):
             ecr_bin = bin(i)
             ajout0 = n+2 - len(ecr_bin)
@@ -62,5 +67,6 @@ class HeldKalp:
                     tab.append(list[j])	
             for perm in it.permutations(tab):
                 perm_tab = [i for i in perm]
-                res.append(perm_tab)
+                res[0].append(perm_tab)
+                res[1].append(tuple(perm_tab))
         return res

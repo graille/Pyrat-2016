@@ -2,7 +2,7 @@ import random as rd
 import numpy as np
 
 class Fourmis:
-    def __init__(self, maze, fromLocation, locationList, pheromonesTime = 300, antNumber = 200, pheromonesMax = 100):
+    def __init__(self, maze, fromLocation, locationList, pheromonesTime = 300, antNumber = 200, pheromonesMax = 1, pheromonesMin = 0.01):
         """Prend la liste des cases a visiter"""
         self.maze = maze
         self.distances = self.maze.distanceMetagraph
@@ -11,8 +11,9 @@ class Fourmis:
         self.locationNumber = len(self.locationList)
         self.fromLocation = fromLocation
         self.antNumber = antNumber
-        self.pheromonesDico = {fLocation : {tLocation : [int(pheromonesMax*5/pheromonesTime)]*pheromonesTime for tLocation in [self.fromLocation]+self.locationList} for fLocation in [self.fromLocation]+self.locationList}
+        self.pheromonesDico = {fLocation : {tLocation : [1./pheromonesTime]*pheromonesTime for tLocation in [self.fromLocation]+self.locationList} for fLocation in [self.fromLocation]+self.locationList}
         self.pheromonesMax = pheromonesMax
+        self.pheromonesMin = pheromonesMin
 
     def process(self):
         for i in range(self.antNumber):
@@ -23,7 +24,7 @@ class Fourmis:
             while n > 0:
                 (case, pheromones) = self.weightedChoice(locationList, currentLocation)
                 n-=1
-                self.pheromonesDico[currentLocation][case][-1] += self.partiePositive(self.pheromonesMax - distanceSum)
+                self.pheromonesDico[currentLocation][case][-1] += 1./distanceSum
                 distanceSum += self.distances[currentLocation][case]
                 #On passe à la case suivante
                 currentLocation = case
@@ -34,14 +35,17 @@ class Fourmis:
     def weightedChoice(self, list, currentLocation):
         """Fait un tirage au sort sans remise en affectant les poids, retourne l'élément choisi et son poids"""
         n = len(list)
-        weightedList = []
+        rand = rd.random()
+        nbPhero = 0
         for elt in list:
-            for j in range(self.getPheromonesPath(currentLocation, elt)):
-                weightedList.append(elt)
-        choicedElement = rd.choice(weightedList)
-        list.remove(choicedElement)
-        choicedElementweight = self.getPheromonesPath(currentLocation, choicedElement)
-        return (choicedElement, choicedElementweight)
+            nbPhero += self.getPheromonesPath(currentLocation, elt)
+        currentPhero = 0
+        for elt in list:
+            eltPhero = self.getPheromonesPath(currentLocation, elt)
+            if rand < (currentPhero+eltPhero)/nbPhero:
+                list.remove(elt)
+                return(elt, eltPhero)
+            currentPhero += eltPhero  
 
     def getPheromonesPath(self, fromLocation, toLocation):
         res = 0
@@ -55,7 +59,7 @@ class Fourmis:
             for toLocation in self.locationList :
                 n = self.pheromonesDico[fromLocation][toLocation]
                 self.pheromonesDico[fromLocation][toLocation].pop(0)
-                self.pheromonesDico[fromLocation][toLocation].append(1)
+                self.pheromonesDico[fromLocation][toLocation].append(self.pheromonesMin)
 
     def retournerCheminOpt(self):
         toVisitList = self.locationList.copy()
