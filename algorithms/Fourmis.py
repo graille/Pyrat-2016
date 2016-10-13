@@ -2,10 +2,10 @@ import random as rd
 import numpy as np
 
 class Fourmis:
-    def __init__(self, maze, fromLocation, locationList, pheromonesTime = 100, antNumber = 1000, pheromonesMax = 1, pheromonesMin = 0.01):
+    def __init__(self, engine, fromLocation, locationList, pheromonesTime = 100, antNumber = 1000, pheromonesMax = 1, pheromonesMin = 0.01):
         """Prend la liste des cases a visiter"""
-        self.maze = maze
-        self.distances = self.maze.distanceMetagraph
+        self.engine = engine
+        self.distances = engine.maze.distanceMetagraph
         self.pheromonesTime = pheromonesTime
         self.locationList = locationList
         self.locationNumber = len(self.locationList)
@@ -18,13 +18,13 @@ class Fourmis:
     def process(self):
         for i in range(self.antNumber):
             locationList = self.locationList.copy() #On copie la liste pour pouvoir la modifier
-            distanceSum = 0
+            distanceSum = 1
             n = len(locationList)
             currentLocation = self.fromLocation
             while n > 0:
                 (case, pheromones) = self.weightedChoice(locationList, currentLocation)
                 n-=1
-                self.pheromonesDico[currentLocation][case][-1] += 1./distanceSum
+                self.pheromonesDico[currentLocation][case][-1] += max(np.sqrt(1./distanceSum), self.pheromonesMin)
                 distanceSum += self.distances[currentLocation][case]
                 #On passe à la case suivante
                 currentLocation = case

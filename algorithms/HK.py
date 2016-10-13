@@ -12,9 +12,10 @@ import itertools as it
 from algorithms.Astar import *
 
 class HeldKalp:
-    def __init__(self, maze, from_location, locationList):
+    def __init__(self, engine, from_location, locationList):
         """Prend la liste des cases a visiter"""
-        self.maze = maze
+        self.engine = engine
+        self.distances = engine.maze.distanceMetagraph
         self.locationList = locationList
         self.from_location = from_location
 
@@ -27,7 +28,7 @@ class HeldKalp:
         #init
         cost = {}
         for location in self.locationList :
-            cost[tuple([(location)])] = self.maze.distanceMetagraph[self.from_location][location]
+            cost[tuple([(location)])] = self.distances[self.from_location][location]
         
         costmin = np.inf
         costMinElement = None
@@ -41,7 +42,7 @@ class HeldKalp:
                             for index2 in range(n_comb) :
                                 element2 = comb_tab[index2]
                                 if element2+element3 == element :
-                                    cost2to3 = self.maze.distanceMetagraph[element2[-1]][element3[0]]
+                                    cost2to3 = self.distances[element2[-1]][element3[0]]
                                     t_element = comb_tuple[index]
                                     t_element2 = comb_tuple[index2]
                                     if t_element not in cost or cost[t_element] > cost[t_element2] + cost2to3:
