@@ -2,7 +2,7 @@ import random as rd
 import numpy as np
 
 class Fourmis:
-    def __init__(self, maze, fromLocation, locationList, pheromonesTime = 300, antNumber = 200, pheromonesMax = 1, pheromonesMin = 0.01):
+    def __init__(self, maze, fromLocation, locationList, pheromonesTime = 100, antNumber = 1000, pheromonesMax = 1, pheromonesMin = 0.01):
         """Prend la liste des cases a visiter"""
         self.maze = maze
         self.distances = self.maze.distanceMetagraph
