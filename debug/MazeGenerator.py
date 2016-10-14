@@ -4,7 +4,7 @@
 import numpy as np
 from tkinter import *
 
-class MazeGenerator:
+class MazeGenerator():
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
         self.window = Tk()
 
@@ -100,11 +100,9 @@ class MazeGenerator:
         :return: La destination du chemin
         """
 
-
         color = kwargs['color'] if 'color' in kwargs else 'red'
         size = kwargs['size'] if 'size' in kwargs else 10
 
-        print("Args : " + repr(args) + " | len : " + str(len(args)))
         if len(args) == 2:
             P = self.getPath(args[0], args[1])
         elif len(args) == 1:
