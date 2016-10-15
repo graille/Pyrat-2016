@@ -6,7 +6,6 @@ Created on Thu Sep 15 22:41:11 2016
 """
 
 from debug.MazeGenerator import *
-from process.Enums import *
 
 class Debug:
     def __init__(self, engine):
@@ -27,7 +26,7 @@ class Debug:
         mg.show()
 
     def showMetaPath(self, path):
-        origin = path[0] if path[0] != GameEnum.LOCATION_LABEL else self.engine.player.location
+        origin = path[0]
 
         paths = self.maze.convertMetaPathToRealPaths(path)
         mg = self.getMG()

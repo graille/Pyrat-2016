@@ -28,6 +28,7 @@ class MazeGenerator():
 
         # Generation
         self.generate()
+
     def generate(self):
         for n in self.nodes:
             self.generateNode(n)
