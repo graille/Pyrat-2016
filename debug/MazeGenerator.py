@@ -3,10 +3,12 @@
 
 import numpy as np
 from tkinter import *
+import tkinter.font as tkFont
 
 class MazeGenerator():
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
         self.window = Tk()
+        self.window.title("Maze viewer")
 
         # Save Maze
         self.mazeMap = mazeMap
@@ -19,19 +21,27 @@ class MazeGenerator():
         self.NODE_SIZE = 8
         self.MARGE = 40
 
-        self.WINDOW_WIDTH = (self.window.winfo_screenwidth() / 2) * (1 - 5/100)
+        self.WINDOW_WIDTH = int((self.window.winfo_screenwidth() / 2) * (1 - 5/100))
         self.WINDOW_HEIGHT = self.WINDOW_WIDTH
 
         # Add Canvas
         self.canvas = Canvas(self.window, width=self.WINDOW_WIDTH, height=self.WINDOW_HEIGHT, background='white')
-        self.canvas.pack()
+        self.canvas.pack(side = LEFT, padx = 5, pady = 5)
+
+        pathTracerHeight = int(self.WINDOW_HEIGHT/25)
+        self.pathTracer = Text(self.window, width=50, height=pathTracerHeight)
+        self.pathTracer.pack(side=RIGHT, pady=5)
 
         # Generation
         self.generate()
 
     def generate(self):
+        font = tkFont.Font(family='Helvetica', size=6)
+
         for n in self.nodes:
             self.generateNode(n)
+            x,y = self.convertToCord(n)
+            self.canvas.create_text(x - 20, y - 15, text=repr(n), font=font)
 
         for i in self.nodes:
             for j in self.nodes:
@@ -59,9 +69,9 @@ class MazeGenerator():
         x2, y2 = self.convertToCord(j)
         self.canvas.create_line(x1, y1, x2, y2, width=size, fill=color)
 
-    def showNodes(self, nodes):
+    def showNodes(self, nodes, color = "blue", size = 11):
         for n in nodes:
-            self.generateNode(n, self.NODE_SIZE + 3, 'blue')
+            self.generateNode(n, size, color)
 
     def getPath(self, origin, pathNodes):
         L = [origin]
@@ -82,6 +92,7 @@ class MazeGenerator():
 
     def convertToCord(self, pos):
         x, y = pos
+
         w, h = self.WINDOW_WIDTH, self.WINDOW_HEIGHT
 
         gap_h = (h - 2 * self.MARGE) / (self.mazeHeight - 1)
@@ -112,6 +123,7 @@ class MazeGenerator():
         for k in range(len(P) - 1):
             self.generateEdge(P[k], P[k + 1], size, color)
 
+        self.pathTracer.insert(END, "From " + repr(P[0]) + " to " + repr(P[-1]) + " (" + color + ")"'\n')
         return P[-1] # Return the last point
 
     def show(self):

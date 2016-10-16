@@ -17,6 +17,8 @@ from process.Engine import *
 
 # Debug
 from debug.Debug import *
+from algorithms.Kmeans import *
+from debug.MazeGenerator import *
 
 # Initialize vars
 TEAM_NAME = "Paul La Souris"
@@ -31,26 +33,53 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     # Update with preprocessing argument
     engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed, True)
 
-    #to = engine.algorithms.get('twoopt')
-
-    #to.setOrigin(GameEnum.LOCATION_LABEL)
-    #to.setGoals(piecesOfCheese)
-    #to.setImprove(False)
-    #to.process()
-
-    #path1 = to.getResult()[1]
-
-
-    #debug = Debug(engine)
-    #debug.showMetaPath(path1)
-
-
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
     global engine
 
     # Update
     engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
     action = engine.turn()
+
+
+    t = time.clock()
+    debug = Debug(engine)
+    k = 7
+    alg = K_Means(engine.maze)
+    alg.setNodes(piecesOfCheese)
+    alg.setK(k)
+
+    result = alg.process(500)
+
+    # mg = MazeGenerator(mazeMap, mazeWidth, mazeHeight)
+    #
+    # nodes = engine.maze.nodes.copy()
+    # mg.showNodes(piecesOfCheese, "black")
+    # for i in range(k):
+    #     mg.showNodes(result[1][i], debug.PATH_COLOR[debug.CURRENT_PATH_COLOR])
+    #     debug.CURRENT_PATH_COLOR = (debug.CURRENT_PATH_COLOR + 1) % len(debug.PATH_COLOR)
+    #     mg.showNodes([result[0][i]], 'red', 20)
+
+    #mg.show()
+    #print(result)
+    #print(time.clock() - t)
+
+    to = TwoOPT(engine.maze)
+    to.setOrigin(player_origin)
+    to.setGoals(result[1][0])
+    to.process()
+
+    result = to.getResult()
+    debug.showMetaPath(result[1])
+    # to = engine.algorithms.get('twoopt')
+    #
+    # to.setOrigin(playerLocation)
+    # to.setGoals(engine.EXPLOITABLE_CHEESES)
+    # to.setImprove(False)
+    # to.process()
+    #
+    # path1 = to.getResult()[1]
+    # debug = Debug(engine)
+    # debug.showMetaPath(path1)
 
     print('[' + action + ']')
     return action

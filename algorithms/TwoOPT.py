@@ -52,15 +52,11 @@ class TwoOPT:
             if self.NB_OF_NODES > 1 and self.improveAlg:
                 for i in range(self.NB_OF_NODES - 1):
                     if self.getDistance(i, -1) < self.getDistance(i, i+1):
-                        #print(list(range(1, self.NB_OF_NODES - i)))
                         self.path = self.path[:(i+1)] + (self.path[(i+1)::])[::-1]
-                        #print("personnal improve")
-                        #print("Current path " + repr(self.getResult()))
                         improve = True
 
             for i in range(self.NB_OF_NODES): #range(self.NB_OF_NODES) optimize the loop, range(1, self.NB_OF_NODES - 1) optimize a way, but keep the last point at is place
                 for j in range(self.NB_OF_NODES):
-                    print(self.path)
                     if j in [i - 1 % self.NB_OF_NODES, i, i + 1 % self.NB_OF_NODES]:
                         continue
 

@@ -12,7 +12,7 @@ class Debug:
         self.engine = engine
         self.maze = engine.maze
 
-        self.PATH_COLOR = ['red', 'grey', 'green', 'blue']
+        self.PATH_COLOR = ['red', 'grey', 'green', 'blue', 'orange', 'yellow', 'pink', 'cyan4', 'cyan3', 'azure4', 'orchid']
         self.CURRENT_PATH_COLOR = 0
 
     def showPath(self, *args):
@@ -25,21 +25,27 @@ class Debug:
 
         mg.show()
 
-    def showMetaPath(self, path):
-        origin = path[0]
+    def showMetaPath(self, paths = []):
+        if len(paths) > 0:
+            origin = paths[0]
 
-        paths = self.maze.convertMetaPathToRealPaths(path)
-        mg = self.getMG()
+            paths = self.maze.convertMetaPathToRealPaths(paths)
+            mg = self.getMG()
 
-        size = 10
-        current = origin
-        for path in paths:
-            print("## Show path : " + repr(path))
-            current = mg.showPath(current, path, size=size, color='red')
-            size += 1
-
-        mg.show()
-
+            size = 10
+            current = origin
+            k = 0
+            for path in paths:
+                current2 = mg.showPath(current, path, size=size, color=self.PATH_COLOR[self.CURRENT_PATH_COLOR])
+                if k%5 == 0 and k >= 4:
+                    self.CURRENT_PATH_COLOR = (self.CURRENT_PATH_COLOR + 1) % len(self.PATH_COLOR)
+                print("## Path " + repr(k) + " from " + repr(current) + " to " + repr(current2) + " : " + repr(path))
+                k += 1
+                current = current2
+            mg.show()
+        else:
+            mg = self.getMG()
+            mg.show()
     def getMG(self):
         mg = MazeGenerator(self.maze.mazeMap, self.maze.mazeWidth, self.maze.mazeHeight)
         mg.showNodes(self.engine.INITIAL_CHEESES)

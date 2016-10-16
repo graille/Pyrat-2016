@@ -11,6 +11,7 @@ class Rat:
         self.score = 0
         self.path = []
         self.precedentNodes = []
+        self.destination = None
 
     def addCheese(self):
         self.score += 1

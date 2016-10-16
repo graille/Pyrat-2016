@@ -12,7 +12,7 @@ from includes.Rat import *
 from algorithms.Dijkstra import *
 from algorithms.Astar import *
 from algorithms.TwoOPT import *
-
+from algorithms.Kmeans import *
 # Debug
 from debug.Debug import *
 
@@ -31,81 +31,11 @@ class AlgorithmsList:
     def get(self, name):
         return self.algorithms[name]
 
-
-class MazeController:
-    def __init__(self, maze, algorithms):
-        self.maze = maze
-        self.algorithms = algorithms
-
-    def fastestPathToNode(self, origin, goal):
-        """
-        Find the fastest path from origin to goal
-        :param origin:
-        :param goal:
-        :return:
-        """
-        al = self.algorithms.get('astar')
-
-        al.setOrigin(origin)
-        al.setGoal(goal)
-
-        al.process()
-
-        return al.getResult()
-
-    def createMetaGraph(self, cheeses_list):
-        """
-        Create the pattern of the metagraph(distance between cheeses
-        :param nodes_list: List of currents cheeses
-        :return:
-        """
-        dij = self.algorithms.get('dijkstra')
-        for n1 in cheeses_list:
-            self.maze.distanceMetagraph[n1] = {}
-            self.maze.pathMetagraph[n1] = {}
-
-            # Calculate path and distance with Dijkstra
-            dij.setOrigin(n1)
-            dij.setGoal(None)
-            dij.process()
-
-            for n2 in cheeses_list:
-                result = dij.getResult(n2)
-                self.maze.distanceMetagraph[n1][n2] = result[0]
-                self.maze.pathMetagraph[n1][n2] = result[1]
-
-    def addNodeToMetagraph(self, node, nodes_list):
-        """
-        Ajoute le noeud "node" par rapports aux nodes "nodes_list" qui doivent déja exister dans le metaGraph
-        :param node: noeud a ajouter ou uploader
-        :param nodes_list:
-        :return:
-        """
-        dij = self.algorithms.get('dijkstra')
-
-        dij.setOrigin(node)
-        dij.setGoal(None)
-        dij.process()
-
-        try:
-            keys = self.maze.distanceMetagraph[node].keys()
-        except KeyError:
-            keys = []
-            self.maze.distanceMetagraph[node] = {}
-            self.maze.pathMetagraph[node] = {}
-
-        for n in nodes_list:
-            if n not in keys:  # If we have never calculate the distance
-                result = dij.getResult(n)
-                self.maze.distanceMetagraph[node][n], self.maze.distanceMetagraph[n][node] = result[0], result[0]
-                self.maze.pathMetagraph[node][n], self.maze.pathMetagraph[n][node] = result[1], result[1]
-
 class Engine:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
         # Cache maze and algorithms
         self.maze = Maze(mazeMap, mazeWidth, mazeHeight)
         self.algorithms = AlgorithmsList(self.maze)
-        self.mazeController = MazeController(self.maze, self.algorithms)
 
         # Init vars
         self.DF_MAX = 1
@@ -114,6 +44,10 @@ class Engine:
         # Cache players
         self.player = None
         self.opponent = None
+
+        # Cache clusters
+        self.cluster = []
+        self.clusterMiddle = []
 
     def turn(self):
         if self.CURRENT_CHEESES_NB == 1:
@@ -160,16 +94,32 @@ class Engine:
                 self.player.path = alg.getResult()[1]
         else:
             # Add player and opponent to metaGraph
-            self.mazeController.addNodeToMetagraph(self.player.location, self.CURRENT_CHEESES_LOCATION)
-            self.mazeController.addNodeToMetagraph(self.opponent.location, self.CURRENT_CHEESES_LOCATION + [self.player.location])
+            self.maze.addNodeToMetagraph(self.player.location, self.CURRENT_CHEESES_LOCATION)
+            self.maze.addNodeToMetagraph(self.opponent.location, self.CURRENT_CHEESES_LOCATION + [self.player.location])
 
             # Update DF_MAX
             self.DF_MAX = (self.TOTAL_CHEESES - self.player.score) / (self.TOTAL_CHEESES - self.opponent.score)
 
+            if not self.player.path or self.player.destination not in self.CURRENT_CHEESES_LOCATION:
+                # Update clusters
+                alg = K_Means(self.maze)
+                alg.setNodes(self.CURRENT_CHEESES_LOCATION)
+                alg.setK(round(self.CURRENT_CHEESES_NB * 7 / self.INITIAL_CHEESES))
+
+                result = alg.process(10)
+
+                # Detect nearest cluster
+                dij = Dijkstra(self.maze)
+
+
             # Get cheeses we can have
-            self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION, True)
-            self.EXPLOITABLE_CHEESES = self.returnUnderValue(self.factors, self.DF_MAX, False)
-            print(self.EXPLOITABLE_CHEESES)
+            #self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION, True)
+            #self.EXPLOITABLE_CHEESES = self.returnUnderValue(self.factors, self.DF_MAX, False)
+
+        # Return path
+        way = self.player.path[0]
+        self.player.path = self.player.path[1::] if len(self.player.path) > 1 else []
+        return way
 
     def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed, PREPROCESSING = False):
         # If it's the first update (we are in the preprocessing)
@@ -179,11 +129,22 @@ class Engine:
             self.opponent = Opponent(opponentLocation)
 
             # Create Metagraph
-            self.mazeController.createMetaGraph(piecesOfCheese)
+            self.maze.createMetaGraph(piecesOfCheese)
 
             # Get the total number of cheeses
             self.TOTAL_CHEESES = len(piecesOfCheese)
             self.INITIAL_CHEESES = piecesOfCheese
+
+            # Create clusters
+            alg = K_Means(self.maze)
+            alg.setNodes(piecesOfCheese)
+            alg.setK(7)
+
+            result = alg.process(500)
+
+            for i in range(len(result[1])):
+                self.cluster.append((len(result[1][i]), result[1][i]))
+                self.clusterMiddle.append(result[0][i])
 
         # Miscellaneous
         self.CURRENT_CHEESES_NB = len(piecesOfCheese)
