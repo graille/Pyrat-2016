@@ -117,3 +117,69 @@ class Maze:
             r += path
 
         return r
+    
+    
+    # Metagraph
+    
+    def fastestPathToNode(self, origin, goal):
+        """
+        Find the fastest path from origin to goal
+        :param origin:
+        :param goal:
+        :return:
+        """
+        al = Astar(self)
+
+        al.setOrigin(origin)
+        al.setGoal(goal)
+
+        al.process()
+
+        return al.getResult()
+
+    def createMetaGraph(self, cheeses_list):
+        """
+        Create the pattern of the metagraph(distance between cheeses
+        :param nodes_list: List of currents cheeses
+        :return:
+        """
+        dij = Dijkstra(self)
+        for n1 in cheeses_list:
+            self.distanceMetagraph[n1] = {}
+            self.pathMetagraph[n1] = {}
+
+            # Calculate path and distance with Dijkstra
+            dij.setOrigin(n1)
+            dij.setGoal(None)
+            dij.process()
+
+            for n2 in cheeses_list:
+                result = dij.getResult(n2)
+                self.distanceMetagraph[n1][n2] = result[0]
+                self.pathMetagraph[n1][n2] = result[1]
+
+    def addNodeToMetagraph(self, node, nodes_list):
+        """
+        Ajoute le noeud "node" par rapports aux nodes "nodes_list" qui doivent déja exister dans le metaGraph
+        :param node: noeud a ajouter ou uploader
+        :param nodes_list:
+        :return:
+        """
+        dij = Dijkstra(self)
+
+        dij.setOrigin(node)
+        dij.setGoal(None)
+        dij.process()
+
+        try:
+            keys = self.distanceMetagraph[node].keys()
+        except KeyError:
+            keys = []
+            self.distanceMetagraph[node] = {}
+            self.pathMetagraph[node] = {}
+
+        for n in nodes_list:
+            if n not in keys:  # If we have never calculate the distance
+                result = dij.getResult(n)
+                self.distanceMetagraph[node][n], self.distanceMetagraph[n][node] = result[0], result[0]
+                self.pathMetagraph[node][n], self.pathMetagraph[n][node] = result[1], result[1]

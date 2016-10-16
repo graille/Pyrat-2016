@@ -11,7 +11,8 @@ class TwoOPT:
         self.NB_OF_NODES = len(goals) + 1 if goals else 0
         self.path = []
 
-        self.improve = True
+        self.improveAlg = False
+
     def setOrigin(self, origin):
         self.origin = origin
 
@@ -36,7 +37,7 @@ class TwoOPT:
         self.algorithm()
 
     def setImprove(self, val):
-        self.improve = val
+        self.improveAlg = val
 
     def algorithm(self):
         """
@@ -48,17 +49,14 @@ class TwoOPT:
             improve = False
 
             # Personnal improve
-            if self.NB_OF_NODES > 1 and self.improve:
+            if self.NB_OF_NODES > 1 and self.improveAlg:
                 for i in range(self.NB_OF_NODES - 1):
                     if self.getDistance(i, -1) < self.getDistance(i, i+1):
-                        #print(list(range(1, self.NB_OF_NODES - i)))
                         self.path = self.path[:(i+1)] + (self.path[(i+1)::])[::-1]
-                        #print("personnal improve")
-                        #print("Current path " + repr(self.getResult()))
                         improve = True
 
-            for i in range(self.NB_OF_NODES - 1): #range(self.NB_OF_NODES) optimize the loop, range(1, self.NB_OF_NODES - 1) optimize a way, but keep the last point at is place
-                for j in range(self.NB_OF_NODES - 1):
+            for i in range(self.NB_OF_NODES): #range(self.NB_OF_NODES) optimize the loop, range(1, self.NB_OF_NODES - 1) optimize a way, but keep the last point at is place
+                for j in range(self.NB_OF_NODES):
                     if j in [i - 1 % self.NB_OF_NODES, i, i + 1 % self.NB_OF_NODES]:
                         continue
 
@@ -92,6 +90,8 @@ class TwoOPT:
         :param j: arrete partant de j
         """
         #print(str(int(round(abs(i - j)/2))) +  repr((i, j)))
+        if i > j:
+            i, j = j, i
         for k in range(int(round(abs(i - j)/2))):
             #print(((i + k + 1) % self.NB_OF_NODES, j - k))
             self.path[(i + k + 1) % self.NB_OF_NODES], self.path[j - k] = self.path[j - k], self.path[(i + 1 + k) % self.NB_OF_NODES]

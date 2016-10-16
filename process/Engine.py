@@ -12,10 +12,7 @@ from includes.Rat import *
 from algorithms.Dijkstra import *
 from algorithms.Astar import *
 from algorithms.TwoOPT import *
-
-# Import enumrations
-from process.Enums import *
-
+from algorithms.Kmeans import *
 # Debug
 from debug.Debug import *
 
@@ -34,91 +31,11 @@ class AlgorithmsList:
     def get(self, name):
         return self.algorithms[name]
 
-
-class MazeController:
-    def __init__(self, maze, algorithms):
-        self.maze = maze
-        self.algorithms = algorithms
-
-    def fastestPathToNode(self, origin, goal):
-        """
-        Find the fastest path from origin to goal
-        :param origin:
-        :param goal:
-        :return:
-        """
-        al = dij = self.algorithms.get('astar')
-
-        al.setOrigin(origin)
-        al.setGoal(goal)
-
-        al.process()
-
-        return al.getResult()
-
-    def createMetaGraph(self, player, nodes_list):
-        """
-        Remplit les cases du dictionnaire d'adjacence et du dictionnaire de chemins pour les cases spécifiées
-        :param player: A Rat instance (player or opponnent)
-        :param nodes_list: List of currents cheeses
-        :return:
-        """
-
-        dij = self.algorithms.get('dijkstra')
-
-        # Initiliaze cells for player location
-        self.maze.distanceMetagraph[GameEnum.LOCATION_LABEL] = {}
-        self.maze.pathMetagraph[GameEnum.LOCATION_LABEL] = {}
-        self.maze.distanceMetagraph[GameEnum.LOCATION_LABEL][GameEnum.LOCATION_LABEL] = 0
-        self.maze.pathMetagraph[GameEnum.LOCATION_LABEL][GameEnum.LOCATION_LABEL] = ""
-
-        for n1 in nodes_list:
-            self.maze.distanceMetagraph[n1] = {}
-            self.maze.pathMetagraph[n1] = {}
-
-            # Calculate path and distance with Dijkstra
-            dij.setOrigin(n1)
-            dij.setGoal(None)
-            dij.process()
-
-            for n2 in nodes_list:
-                result = dij.getResult(n2)
-                self.maze.distanceMetagraph[n1][n2] = result[0]
-                self.maze.pathMetagraph[n1][n2] = result[1]
-
-            # Initiliaze subcells for player location
-            self.maze.distanceMetagraph[n1][GameEnum.LOCATION_LABEL] = {}
-            self.maze.pathMetagraph[n1][GameEnum.LOCATION_LABEL] = {}
-
-        self.updateMetaGraph(player, nodes_list)
-
-    def updateMetaGraph(self, player, nodes_list):
-        """
-        :param player: A Rat instance (player or opponnent)
-        :param nodes_list: List of currents cheeses
-        :return:
-        """
-        dij = self.algorithms.get('dijkstra')
-
-        dij.setOrigin(player.location)
-        dij.setGoal(None)
-        dij.process()
-
-        for n in nodes_list:
-            result = dij.getResult(n)
-            self.maze.distanceMetagraph[GameEnum.LOCATION_LABEL][n] = result[0]
-            self.maze.pathMetagraph[GameEnum.LOCATION_LABEL][n] = result[1]
-
-            self.maze.distanceMetagraph[n][GameEnum.LOCATION_LABEL] = result[0]
-            self.maze.pathMetagraph[n][GameEnum.LOCATION_LABEL] = result[1]
-
-
 class Engine:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
         # Cache maze and algorithms
         self.maze = Maze(mazeMap, mazeWidth, mazeHeight)
         self.algorithms = AlgorithmsList(self.maze)
-        self.mazeController = MazeController(self.maze, self.algorithms)
 
         # Init vars
         self.DF_MAX = 1
@@ -128,24 +45,78 @@ class Engine:
         self.player = None
         self.opponent = None
 
+        # Cache clusters
+        self.cluster = []
+        self.clusterMiddle = []
+
     def turn(self):
-        if not self.player.path:
-            algorithm = self.algorithms.get('dijkstra')
+        if self.CURRENT_CHEESES_NB == 1:
+            alg = self.algorithms.get('astar')
+            alg.setOrigin(self.player.location)
+            alg.setGoal(self.CURRENT_CHEESES_LOCATION[0])
+            alg.process()
 
-            # Calculate for player
-            algorithm.setGoal(None)
-            algorithm.setOrigin(self.player.location)
-            algorithm.process()
+            self.player.path = alg.getResult()[1]
+        elif self.CURRENT_CHEESES_NB == 2:
+            factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
+            n1, n2 = self.CURRENT_CHEESES_LOCATION[0], self.CURRENT_CHEESES_LOCATION[1]
 
-            r = []
-            for k in self.CURRENT_CHEESES_LOCATION:
-                r.append(algorithm.getResult(k))
+            alg = self.algorithms.get('astar')
+            alg.setOrigin(self.player.location)
 
-            r.sort()
-            self.player.path = (r[::-1].pop())[1]
-            print("Current cheeses" + repr(self.CURRENT_CHEESES_LOCATION))
-            print("New path for player : " + repr(self.player.path))
+            if factors[n1] <= 1 and factors[n2] <= 1:
+                if factors[n1] > factors[n2]:
+                    alg.setGoal(n1)
+                    alg.process()
+                else:
+                    alg.setGoal(n2)
+                    alg.process()
 
+                self.player.path = alg.getResult()[1]
+            elif factors[n1] < 1 and factors[n2] > 1:
+                alg.setGoal(n1)
+                alg.process()
+
+                self.player.path = alg.getResult()[1]
+            elif factors[n1] > 1 and factors[n2] < 1:
+                alg.setGoal(n2)
+                alg.process()
+
+                self.player.path = alg.getResult()[1]
+            else:
+                if factors[n1] > factors[n2]:
+                    alg.setGoal(n2)
+                    alg.process()
+                else:
+                    alg.setGoal(n1)
+                    alg.process()
+
+                self.player.path = alg.getResult()[1]
+        else:
+            # Add player and opponent to metaGraph
+            self.maze.addNodeToMetagraph(self.player.location, self.CURRENT_CHEESES_LOCATION)
+            self.maze.addNodeToMetagraph(self.opponent.location, self.CURRENT_CHEESES_LOCATION + [self.player.location])
+
+            # Update DF_MAX
+            self.DF_MAX = (self.TOTAL_CHEESES - self.player.score) / (self.TOTAL_CHEESES - self.opponent.score)
+
+            if not self.player.path or self.player.destination not in self.CURRENT_CHEESES_LOCATION:
+                # Update clusters
+                alg = K_Means(self.maze)
+                alg.setNodes(self.CURRENT_CHEESES_LOCATION)
+                alg.setK(round(self.CURRENT_CHEESES_NB * 7 / self.INITIAL_CHEESES))
+
+                result = alg.process(10)
+
+                # Detect nearest cluster
+                dij = Dijkstra(self.maze)
+
+
+            # Get cheeses we can have
+            #self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION, True)
+            #self.EXPLOITABLE_CHEESES = self.returnUnderValue(self.factors, self.DF_MAX, False)
+
+        # Return path
         way = self.player.path[0]
         self.player.path = self.player.path[1::] if len(self.player.path) > 1 else []
         return way
@@ -158,53 +129,65 @@ class Engine:
             self.opponent = Opponent(opponentLocation)
 
             # Create Metagraph
-            self.mazeController.createMetaGraph(self.player, piecesOfCheese)
+            self.maze.createMetaGraph(piecesOfCheese)
 
             # Get the total number of cheeses
             self.TOTAL_CHEESES = len(piecesOfCheese)
             self.INITIAL_CHEESES = piecesOfCheese
+
+            # Create clusters
+            alg = K_Means(self.maze)
+            alg.setNodes(piecesOfCheese)
+            alg.setK(7)
+
+            result = alg.process(500)
+
+            for i in range(len(result[1])):
+                self.cluster.append((len(result[1][i]), result[1][i]))
+                self.clusterMiddle.append(result[0][i])
 
         # Miscellaneous
         self.CURRENT_CHEESES_NB = len(piecesOfCheese)
         self.CURRENT_CHEESES_LOCATION = piecesOfCheese
 
         # Update locations
-        self.player.location = playerLocation
-        self.opponent.location = opponentLocation
+        self.player.setLocation(playerLocation)
+        self.opponent.setLocation(opponentLocation)
 
         # Update scores
         self.player.score = playerScore
         self.opponent.score = opponentScore
 
-        # Update DF_MAX
-        self.DF_MAX = (self.TOTAL_CHEESES - self.player.score) / (self.TOTAL_CHEESES - self.opponent.score)
-
-        self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
-        self.EXPLOITABLE_CHEESES = self.returnUnderValue(self.factors, self.DF_MAX, False)
-
     # Factors management
-    def calculateFactors(self, nodes):
-        algorithm = self.algorithms.get('dijkstra')
+    def calculateFactors(self, nodes, metaGraph = False):
+        if metaGraph:
+            # Calculate factors
+            factors = {}
 
-        # Calculate for player
-        algorithm.setGoal(None)
-        algorithm.setOrigin(self.player.location)
-        algorithm.process()
+            for c in nodes:
+                factors[c] = float(self.maze.distanceMetagraph[self.player.location][c] / self.maze.distanceMetagraph[self.opponent.location][c])
+        else:
+            algorithm = self.algorithms.get('dijkstra')
 
-        playerResult = algorithm.dist
+            # Calculate for player
+            algorithm.setGoal(None)
+            algorithm.setOrigin(self.player.location)
+            algorithm.process()
 
-        # Calculate for opponent
-        algorithm.setGoal(None)
-        algorithm.setOrigin(self.opponent.location)
-        algorithm.process()
+            playerResult = algorithm.dist
 
-        opponentResult = algorithm.dist
+            # Calculate for opponent
+            algorithm.setGoal(None)
+            algorithm.setOrigin(self.opponent.location)
+            algorithm.process()
 
-        # Calculate factors
-        factors = {}
+            opponentResult = algorithm.dist
 
-        for c in nodes:
-            factors[c] = float(playerResult[c] / opponentResult[c])
+            # Calculate factors
+            factors = {}
+
+            for c in nodes:
+                factors[c] = float(playerResult[c] / opponentResult[c])
 
         return factors
 
