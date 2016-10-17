@@ -39,46 +39,6 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
     # Update
     engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
 
-    debug = Debug(engine)
-    k = 7
-    alg = K_Means(engine.maze)
-    alg.setNodes(piecesOfCheese)
-    alg.setK(k)
-
-    result = alg.process(100)
-
-    mg = MazeGenerator(mazeMap, mazeWidth, mazeHeight)
-
-    nodes = engine.maze.nodes.copy()
-    mg.showNodes(piecesOfCheese, "black")
-    for i in range(k):
-        mg.showNodes(result[1][i], debug.PATH_COLOR[debug.CURRENT_PATH_COLOR])
-        debug.CURRENT_PATH_COLOR = (debug.CURRENT_PATH_COLOR + 1) % len(debug.PATH_COLOR)
-        mg.showNodes([result[0][i]], 'red', 20)
-
-    # action = engine.turn()
-    #mg.show()
-    #print(result)
-    #print(time.clock() - t)
-
-    to = TwoOPT(engine.maze)
-    to.setOrigin(player_origin)
-    to.setGoals(result[1][0])
-    to.process()
-
-    result = to.getResult()
-    debug.showMetaPath(result[1])
-    # to = engine.algorithms.get('twoopt')
-    #
-    # to.setOrigin(playerLocation)
-    # to.setGoals(engine.EXPLOITABLE_CHEESES)
-    # to.setImprove(False)
-    # to.process()
-    #
-    # path1 = to.getResult()[1]
-    # debug = Debug(engine)
-    # debug.showMetaPath(path1)
-
     print('[' + action + ']')
     return action
 
@@ -389,24 +349,5 @@ if __name__ == "__main__":
 
     player_origin = (24, 0)
     opponent_origin = (0, 24)
-    t = time.clock()
 
     preprocessing(mazeMap, w, h, player_origin, opponent_origin, cheeses, 3)
-
-
-    print(time.clock() - t)
-
-    debug = Debug(engine)
-    mg = MazeGenerator(mazeMap, w, h)
-    mg.showNodes(cheeses, "black")
-    for i in range(9):
-        mg.showNodes(engine.cluster[i][1], debug.PATH_COLOR[debug.CURRENT_PATH_COLOR])
-        debug.CURRENT_PATH_COLOR = (debug.CURRENT_PATH_COLOR + 1) % len(debug.PATH_COLOR)
-
-    mg.show()
-
-    #debug = MazeGenerator(mazeMap, w, h)
-    #debug.showNodes(cheeses)
-    #debug.show()
-
-    #turn(mazeMap, w, h, player_origin, opponent_origin, 0, 0, cheeses, 3)

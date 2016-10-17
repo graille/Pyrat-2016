@@ -10,6 +10,7 @@ class Rat:
         self.location = location
         self.score = 0
         self.path = []
+        self.waitingPaths = []
         self.precedentNodes = []
         self.destination = None
 

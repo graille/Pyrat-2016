@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import numpy as np
+import random as rd
+import time
+
 
 class TwoOPT:
     def __init__(self, maze, origin = None, goals = None):
@@ -12,6 +15,7 @@ class TwoOPT:
         self.path = []
 
         self.improveAlg = False
+        self.allowedTime = np.inf
 
     def setOrigin(self, origin):
         self.origin = origin
@@ -20,42 +24,38 @@ class TwoOPT:
         self.goals = goals
         self.NB_OF_NODES = len(goals) + 1
 
+    def setAllowedTime(self, time):
+        self.allowedTime = time
+
     def calculateFirstPath(self):
         """
         Create a naive path
         """
-        self.path = [self.origin]
+        rd.shuffle(self.goals)
+        self.path = [self.origin] + self.goals
 
         # We start with a random
-        for n in self.goals:
-            if n not in self.path:
-                self.path.append(n)
+        #for n in self.goals:
+        #    if n not in self.path:
+        #        self.path.append(n)
 
     def process(self):
         self.algorithm()
 
-    def setImprove(self, val):
-        self.improveAlg = val
 
     def algorithm(self):
         """
         Calculate a path with the 2-opt algorithm
         """
+        t = time.clock()
         self.calculateFirstPath()
         improve = True
-        while improve:
+        while improve and (self.allowedTime > (time.clock() - t)):
             improve = False
-
-            # Personnal improve
-            if self.NB_OF_NODES > 1 and self.improveAlg:
-                for i in range(self.NB_OF_NODES - 1):
-                    if self.getDistance(i, -1) < self.getDistance(i, i+1):
-                        self.path = self.path[:(i+1)] + (self.path[(i+1)::])[::-1]
-                        improve = True
 
             for i in range(self.NB_OF_NODES): #range(self.NB_OF_NODES) optimize the loop, range(1, self.NB_OF_NODES - 1) optimize a way, but keep the last point at is place
                 for j in range(self.NB_OF_NODES):
-                    if j in [i - 1 % self.NB_OF_NODES, i, i + 1 % self.NB_OF_NODES]:
+                    if j in [(i - 1) % self.NB_OF_NODES, i, (i + 1) % self.NB_OF_NODES]:
                         continue
 
                     if self.getDistance(i, i + 1) + self.getDistance(j, j + 1) > self.getDistance(i, j) + self.getDistance(i + 1, j + 1):
@@ -73,14 +73,11 @@ class TwoOPT:
     def getResultDistance(self):
         r = 0
         for k in range(self.NB_OF_NODES - 1):
-            #print("Distance " + str(k) + " " + repr(self.path[k]) + " to " + str(k+1) + " " + repr(self.path[k+1]) + " = " + str(self.maze.distanceMetagraph[self.path[k]][self.path[k + 1]]))
             r += self.maze.distanceMetagraph[self.path[k]][self.path[k + 1]]
 
         return r # Get the longer of the path, without loop
 
     def getDistance(self, i, j):
-        #print(self.path)
-        #print("##" + " | " + repr(i) + " | " + repr(j) + " || " + repr(self.NB_OF_NODES))
         return self.maze.distanceMetagraph[self.path[i % self.NB_OF_NODES]][self.path[j % self.NB_OF_NODES]]
 
     def exchange(self, i, j): # bug quand ça reboucle !!!
@@ -91,5 +88,6 @@ class TwoOPT:
         """
         if i > j:
             i, j = j, i
+
         for k in range(int(round(abs(i - j)/2))):
             self.path[(i + k + 1) % self.NB_OF_NODES], self.path[j - k] = self.path[j - k], self.path[(i + 1 + k) % self.NB_OF_NODES]

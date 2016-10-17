@@ -13,34 +13,21 @@ from algorithms.Dijkstra import *
 from algorithms.Astar import *
 from algorithms.TwoOPT import *
 from algorithms.Kmeans import *
-# Debug
-from debug.Debug import *
+
+# Import libs
 import time
-
-class AlgorithmsList:
-    def __init__(self, maze):
-        self.algorithms = {}
-        self.maze = maze
-
-        self.initAlgorithms()
-
-    def initAlgorithms(self):
-        self.algorithms['dijkstra'] = Dijkstra(self.maze)
-        self.algorithms['astar'] = Astar(self.maze)
-        self.algorithms['twoopt'] = TwoOPT(self.maze)
-
-    def get(self, name):
-        return self.algorithms[name]
 
 class Engine:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
         # Cache maze and algorithms
         self.maze = Maze(mazeMap, mazeWidth, mazeHeight)
-        self.algorithms = AlgorithmsList(self.maze)
 
         # Init vars
         self.DF_MAX = 1
         self.DF_LIMIT = 1.8
+
+        self.CURRENT_CHEESES_LOCATION = []
+        self.CURRENT_CHEESES_NB = 0
 
         # Cache players
         self.player = None
@@ -49,10 +36,13 @@ class Engine:
         # Cache clusters
         self.cluster = []
         self.clusterMiddle = []
+        self.clusterRentability = []
+
+        self.factors = {}
 
     def turn(self):
         if self.CURRENT_CHEESES_NB == 1:
-            alg = self.algorithms.get('astar')
+            alg = Astar(self.maze)
             alg.setOrigin(self.player.location)
             alg.setGoal(self.CURRENT_CHEESES_LOCATION[0])
             alg.process()
@@ -62,7 +52,7 @@ class Engine:
             factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
             n1, n2 = self.CURRENT_CHEESES_LOCATION[0], self.CURRENT_CHEESES_LOCATION[1]
 
-            alg = self.algorithms.get('astar')
+            alg = Astar(self.maze)
             alg.setOrigin(self.player.location)
 
             if factors[n1] <= 1 and factors[n2] <= 1:
@@ -98,58 +88,99 @@ class Engine:
             self.maze.addNodeToMetagraph(self.player.location, self.CURRENT_CHEESES_LOCATION)
             self.maze.addNodeToMetagraph(self.opponent.location, self.CURRENT_CHEESES_LOCATION + [self.player.location])
 
-            # Update DF_MAX
-            self.DF_MAX = (self.TOTAL_CHEESES - self.player.score) / (self.TOTAL_CHEESES - self.opponent.score)
-
+            # If we need to create a path
             if not self.player.path or self.player.destination not in self.CURRENT_CHEESES_LOCATION:
-                # Update clusters
-                alg = K_Means(self.maze)
-                alg.setNodes(self.CURRENT_CHEESES_LOCATION)
-                alg.setK(round(self.CURRENT_CHEESES_NB * 7 / self.INITIAL_CHEESES))
+                # Update clusters rentability
+                self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION, True)
+                b_r, b_k = -1, -1
 
-                result = alg.process(10)
+                for k in range(len(self.cluster)):
+                    r, nb = 0, 0
+                    for n in self.cluster[k]:
+                        r += 1
+                        nb += self.factors[n]
+                    self.clusterRentability.append(len(self.cluster[k]) / (float(nb / r)))
 
-                # Detect nearest cluster
-                dij = Dijkstra(self.maze)
+                    if self.clusterRentability[-1] > b_r:
+                        b_r = self.clusterRentability[-1]
+                        b_k = k
 
+                # Calculate Path
+                to = TwoOPT(self.maze)
+                to.setOrigin(self.player.location)
+                to.setGoals(self.cluster[b_k])
 
-            # Get cheeses we can have
-            #self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION, True)
-            #self.EXPLOITABLE_CHEESES = self.returnUnderValue(self.factors, self.DF_MAX, False)
+                to.process()
+                d, p = to.getResult()
+
+                # Set path
+                self.player.path = self.maze.concatPaths(self.maze.convertMetaPathToRealPaths(p))
+
+            else:
+                checker = 2
+                # Check around player
+                for n in self.CURRENT_CHEESES_LOCATION:
+                    if self.maze.distanceMetagraph[self.player.location][n] <= checker and n != self.player.destination \
+                            and (not self.inPath(self.player, n)) and (not self.isInteresting(self.player, n)):
+                        self.addToPath(self.player, n)
+                        checker = 1
 
         # Return path
         way = self.player.path[0]
         self.player.path = self.player.path[1::] if len(self.player.path) > 1 else []
         return way
 
+    def isInteresting(self, player, node):
+        # On regarde si ce noeud ne nous fait pas retournée en arrière...
+        pass
+
+    def addToPath(self, player, node):
+        print("## Chemin détourné pour aller sur " + repr(node))
+        if node in self.maze.getNeighbors(player.location):
+            pass
+        else:
+            pass
+
+    def inPath(self, player, node):
+        pass
+
     def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed, PREPROCESSING = False):
+        b_t = time.clock()
         # If it's the first update (we are in the preprocessing)
         if PREPROCESSING:
             # Create players
             self.player = Player(playerLocation)
             self.opponent = Opponent(opponentLocation)
 
-            t = time.clock()
             # Create Metagraph
             self.maze.createMetaGraph(piecesOfCheese)
-            print("# Metagraph  : " + repr(time.clock() - t))
 
             # Get the total number of cheeses
             self.TOTAL_CHEESES = len(piecesOfCheese)
             self.INITIAL_CHEESES = piecesOfCheese
 
             # Create clusters
-            t = time.clock()
             alg = K_Means(self.maze)
             alg.setNodes(piecesOfCheese)
             alg.setK(9)
 
-            result = alg.process(300)
-            print("# K-means  : " + repr(time.clock() - t))
+            result = alg.process((timeAllowed - (time.clock() - b_t)) * (1/3))
+
             for i in range(len(result[1])):
                 self.cluster.append((len(result[1][i]), result[1][i]))
                 self.clusterMiddle.append(result[0][i])
 
+            # TODO : vérifié le nombre total de fromage, ajouté un cluster spécial pur les fromages non référencés
+
+            print("# Preprocessing executed in " + repr(time.clock() - b_t) + " seconds")
+            print(self.cluster)
+
+        # Update cluster (delete old cheeses)
+        for cheese in self.CURRENT_CHEESES_LOCATION:
+            if cheese not in piecesOfCheese:
+                for k in range(len(self.cluster)):
+                    if cheese in self.cluster[k]:
+                        self.cluster[k].remove(cheese)
 
         # Miscellaneous
         self.CURRENT_CHEESES_NB = len(piecesOfCheese)
@@ -163,6 +194,8 @@ class Engine:
         self.player.score = playerScore
         self.opponent.score = opponentScore
 
+        print("# Update executed in " + repr(time.clock() - b_t) + " seconds")
+
     # Factors management
     def calculateFactors(self, nodes, metaGraph = False):
         if metaGraph:
@@ -172,39 +205,25 @@ class Engine:
             for c in nodes:
                 factors[c] = float(self.maze.distanceMetagraph[self.player.location][c] / self.maze.distanceMetagraph[self.opponent.location][c])
         else:
-            algorithm = self.algorithms.get('dijkstra')
+            alg = Dijkstra(self.maze)
 
             # Calculate for player
-            algorithm.setGoal(None)
-            algorithm.setOrigin(self.player.location)
-            algorithm.process()
+            alg.setGoal(None)
+            alg.setOrigin(self.player.location)
+            alg.process()
 
-            playerResult = algorithm.dist
+            playerResult = alg.dist
 
             # Calculate for opponent
-            algorithm.setGoal(None)
-            algorithm.setOrigin(self.opponent.location)
-            algorithm.process()
+            alg.setGoal(None)
+            alg.setOrigin(self.opponent.location)
+            alg.process()
 
-            opponentResult = algorithm.dist
+            opponentResult = alg.dist
 
             # Calculate factors
             factors = {}
-
             for c in nodes:
                 factors[c] = float(playerResult[c] / opponentResult[c])
 
         return factors
-
-    @staticmethod
-    def returnUnderValue(factors, VAL_MAX, OR_EQUAL = False):
-        result = {}
-        for n in factors.keys():
-            if OR_EQUAL:
-                if factors[n] <= VAL_MAX:
-                    result[n] = factors[n]
-            else:
-                if factors[n] < VAL_MAX:
-                    result[n] = factors[n]
-
-        return result

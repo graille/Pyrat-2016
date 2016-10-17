@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import random
-import numpy as np
 from algorithms.Astar import *
+import time
+
 
 class K_Means:
     def __init__(self, maze, k = 4, nodes = None):
@@ -14,8 +15,6 @@ class K_Means:
         self.k = k
         self.nodes = nodes
         self.astar = Astar(maze)
-
-        self.distanceGraph = {}
 
         if nodes:
             self.setNodes(nodes)
@@ -29,7 +28,7 @@ class K_Means:
 
     def getDistance(self, i, j):
         p = random.randint(0,100)
-        if p < 0: # 80% de chance de faire Astar
+        if p < 0:
             x1, y1 = round(i[0]), round(i[1])
             x2, y2 = round(j[0]), round(j[1])
 
@@ -51,37 +50,37 @@ class K_Means:
 
         return (x, y)
 
-    def process(self, iteration = 100):
+    def process(self, allowed_time):
         if self.NB_NODES > self.k:
-            #random.shuffle(self.nodes)
-            t = 0
+            t, nb = time.clock(), 0
 
             # Initialise M
-            self.m[t] = {}
+            self.m[nb] = {}
             for i in range(self.k):
-                self.m[t][i] = self.nodes[i]
+                self.m[nb][i] = self.nodes[i]
 
-            while t < iteration:
-                self.S[t] = {}
-                self.m[t + 1] = {}
+            while allowed_time > (time.clock() - t):
+                self.S[nb] = {}
+                self.m[nb + 1] = {}
                 for i in range(self.k):
-                    self.S[t][i] = []
+                    self.S[nb][i] = []
 
                     for n in self.nodes:
-                        d = self.getDistance(n, self.m[t][i])
+                        d = self.getDistance(n, self.m[nb][i])
                         c = True
 
                         for j in range(self.k):
-                            if d > self.getDistance(n, self.m[t][j]):
+                            if d > self.getDistance(n, self.m[nb][j]):
                                 c = False
 
                         if c:
-                            self.S[t][i].append(n)
+                            self.S[nb][i].append(n)
 
-                    x, y = self.sommeTuplesInList(self.S[t][i])
+                    x, y = self.sommeTuplesInList(self.S[nb][i])
 
-                    self.m[t + 1][i] = (x / len(self.S[t][i]), y / len(self.S[t][i]))
+                    self.m[nb + 1][i] = (x / len(self.S[nb][i]), y / len(self.S[nb][i]))
+                nb += 1
 
-                t += 1
+            print("## K-means executed in " + repr(allowed_time) + " seconds and " + repr(nb) + " operations")
 
-            return (self.m[t - 1], self.S[t - 1])
+            return (self.m[nb - 1], self.S[nb - 1])
