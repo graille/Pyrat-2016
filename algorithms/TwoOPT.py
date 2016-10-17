@@ -31,8 +31,6 @@ class TwoOPT:
             if n not in self.path:
                 self.path.append(n)
 
-        #print("First path " + repr(self.getResult()))
-
     def process(self):
         self.algorithm()
 
@@ -81,6 +79,8 @@ class TwoOPT:
         return r # Get the longer of the path, without loop
 
     def getDistance(self, i, j):
+        #print(self.path)
+        #print("##" + " | " + repr(i) + " | " + repr(j) + " || " + repr(self.NB_OF_NODES))
         return self.maze.distanceMetagraph[self.path[i % self.NB_OF_NODES]][self.path[j % self.NB_OF_NODES]]
 
     def exchange(self, i, j): # bug quand ça reboucle !!!
@@ -89,9 +89,7 @@ class TwoOPT:
         :param i: arrete partant de i
         :param j: arrete partant de j
         """
-        #print(str(int(round(abs(i - j)/2))) +  repr((i, j)))
         if i > j:
             i, j = j, i
         for k in range(int(round(abs(i - j)/2))):
-            #print(((i + k + 1) % self.NB_OF_NODES, j - k))
             self.path[(i + k + 1) % self.NB_OF_NODES], self.path[j - k] = self.path[j - k], self.path[(i + 1 + k) % self.NB_OF_NODES]

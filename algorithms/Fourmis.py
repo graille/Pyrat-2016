@@ -3,11 +3,11 @@ import numpy as np
 
 
 class Fourmis:
-    def __init__(self, engine, fromLocation, locationList, pheromonesTime=100, antNumber=1000, pheromonesMax=1,
+    def __init__(self, maze, fromLocation, locationList, pheromonesTime=100, antNumber=1000, pheromonesMax=1,
                  pheromonesMin=0.01):
         """Prend la liste des cases a visiter"""
-        self.engine = engine
-        self.distances = engine.maze.distanceMetagraph
+        self.maze = maze
+        self.distances = self.maze.distanceMetagraph
         self.pheromonesTime = pheromonesTime
         self.locationList = locationList
         self.locationNumber = len(self.locationList)
@@ -77,7 +77,7 @@ class Fourmis:
                     maxPheromonesToPathIndex = j
             orderedVisitList.append(toVisitList[maxPheromonesToPathIndex])
             toVisitList.pop(maxPheromonesToPathIndex)
-        orderedVisitList.pop(0)  # On retire le fromLocation du début
+
         return orderedVisitList
 
     def partiePositive(self, x):

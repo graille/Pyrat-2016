@@ -15,6 +15,7 @@ from algorithms.TwoOPT import *
 from algorithms.Kmeans import *
 # Debug
 from debug.Debug import *
+import time
 
 class AlgorithmsList:
     def __init__(self, maze):
@@ -128,23 +129,27 @@ class Engine:
             self.player = Player(playerLocation)
             self.opponent = Opponent(opponentLocation)
 
+            t = time.clock()
             # Create Metagraph
             self.maze.createMetaGraph(piecesOfCheese)
+            print("# Metagraph  : " + repr(time.clock() - t))
 
             # Get the total number of cheeses
             self.TOTAL_CHEESES = len(piecesOfCheese)
             self.INITIAL_CHEESES = piecesOfCheese
 
             # Create clusters
+            t = time.clock()
             alg = K_Means(self.maze)
             alg.setNodes(piecesOfCheese)
-            alg.setK(7)
+            alg.setK(9)
 
-            result = alg.process(500)
-
+            result = alg.process(300)
+            print("# K-means  : " + repr(time.clock() - t))
             for i in range(len(result[1])):
                 self.cluster.append((len(result[1][i]), result[1][i]))
                 self.clusterMiddle.append(result[0][i])
+
 
         # Miscellaneous
         self.CURRENT_CHEESES_NB = len(piecesOfCheese)
