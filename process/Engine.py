@@ -90,40 +90,50 @@ class Engine:
 
             # If we need to create a path
             if not self.player.path or self.player.destination not in self.CURRENT_CHEESES_LOCATION:
-                # Update clusters rentability
-                self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION, True)
-                b_r, b_k = -1, -1
+                # We are at destination, we activate the checker
+                self.CHECKER = True
 
-                for k in range(len(self.cluster)):
-                    r, nb = 0, 0
-                    for n in self.cluster[k]:
-                        r += 1
-                        nb += self.factors[n]
-                    self.clusterRentability.append(len(self.cluster[k]) / (float(nb / r)))
+                if self.player.waitingPaths:
+                    self.player.path = self.player.waitingPaths[0]
+                    self.player.waitingPaths = self.player.waitingPaths[1::] if (len(self.player.waitingPaths) > 1) else []
+                else:
+                    # Update clusters rentability
+                    self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION, True)
+                    b_r, b_k = -1, -1
 
-                    if self.clusterRentability[-1] > b_r:
-                        b_r = self.clusterRentability[-1]
-                        b_k = k
+                    for k in range(len(self.cluster)):
+                        r, nb = 0, 0
+                        for n in self.cluster[k]:
+                            r += 1
+                            nb += self.factors[n]
+                        self.clusterRentability.append(len(self.cluster[k]) / (float(nb / r)))
 
-                # Calculate Path
-                to = TwoOPT(self.maze)
-                to.setOrigin(self.player.location)
-                to.setGoals(self.cluster[b_k])
+                        if self.clusterRentability[-1] > b_r:
+                            b_r = self.clusterRentability[-1]
+                            b_k = k
 
-                to.process()
-                d, p = to.getResult()
+                    # Calculate Path
+                    to = TwoOPT(self.maze)
+                    to.setOrigin(self.player.location)
+                    to.setGoals(self.cluster[b_k])
 
-                # Set path
-                self.player.path = self.maze.concatPaths(self.maze.convertMetaPathToRealPaths(p))
+                    to.process()
+                    d, p = to.getResult()
 
+                    # Set path
+                    self.player.path = self.maze.concatPaths(self.maze.convertMetaPathToRealPaths(p))
             else:
-                checker = 2
                 # Check around player
-                for n in self.CURRENT_CHEESES_LOCATION:
-                    if self.maze.distanceMetagraph[self.player.location][n] <= checker and n != self.player.destination \
-                            and (not self.inPath(self.player, n)) and (not self.isInteresting(self.player, n)):
-                        self.addToPath(self.player, n)
-                        checker = 1
+                if self.CHECKER:
+                    for n in self.CURRENT_CHEESES_LOCATION:
+                        if self.maze.distanceMetagraph[self.player.location][n] <= self.CHECKER_RADIUS and n != self.player.destination and (not self.inPath(self.player, n)):
+                            path_to_n = self.maze.pathMetagraph[self.player.location][n]
+                            path_to_n = self.maze.convertToRealPath(self.player.location, path_to_n)
+
+                            if path_to_n:
+                                self.addToPath(self.player, path_to_n)
+                                self.CHECKER = False
+                                break
 
         # Return path
         way = self.player.path[0]
@@ -131,18 +141,25 @@ class Engine:
         return way
 
     def isInteresting(self, player, node):
-        # On regarde si ce noeud ne nous fait pas retournée en arrière...
-        pass
+        return True
 
-    def addToPath(self, player, node):
-        print("## Chemin détourné pour aller sur " + repr(node))
-        if node in self.maze.getNeighbors(player.location):
-            pass
-        else:
-            pass
+    def addToPath(self, player, path_to_goal, goal):
+        print("## Chemin détourné pour aller sur " + repr(goal))
+
+        # Recherche d'un nouveau chemin pour repartir sur notre état d'origine
+        ast = Astar(self.maze, goal, player.destination)
+        ast.process()
+        d, P = ast.getResult()
+
+        P = self.maze.convertToRealPath(player.location, P)
+
+        # Ajout du chemin
+        player.destination = goal
+        player.path = path_to_goal
+        player.waitingPaths = [P] + player.waitingPaths
 
     def inPath(self, player, node):
-        pass
+        return (node in player.path)
 
     def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed, PREPROCESSING = False):
         b_t = time.clock()
@@ -194,6 +211,8 @@ class Engine:
         self.player.score = playerScore
         self.opponent.score = opponentScore
 
+        # Update radius
+        self.CHECKER_RADIUS = 2
         print("# Update executed in " + repr(time.clock() - b_t) + " seconds")
 
     # Factors management

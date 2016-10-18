@@ -111,6 +111,23 @@ class Maze:
 
         return path
 
+    def convertToRealPath(self, origin, pathNodes):
+        L = [origin]
+
+        x, y = origin
+        for elt in pathNodes:
+            if elt == 'L':
+                y -= 1
+            if elt == 'U':
+                x -= 1
+            if elt == 'D':
+                x += 1
+            if elt == 'R':
+                y += 1
+            L.append((x, y))
+
+        return L
+
     def concatPaths(self, paths):
         r = ""
         for path in paths:
@@ -120,7 +137,6 @@ class Maze:
     
     
     # Metagraph
-    
     def fastestPathToNode(self, origin, goal):
         """
         Find the fastest path from origin to goal
