@@ -9,6 +9,8 @@ class Rat:
     def __init__(self, location):
         self.location = location
         self.score = 0
+
+        # Paths managers
         self.path = []
         self.waitingPaths = []
         self.precedentNodes = []
