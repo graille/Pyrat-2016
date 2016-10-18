@@ -20,17 +20,13 @@ player_origin = (24, 0)
 opponent_origin = (0, 24)
 
 maze = Maze(mazeMap, w, h)
-maze.createMetaGraph(cheeses)
-maze.addNodeToMetagraph(player_origin, cheeses)
-maze.addNodeToMetagraph(opponent_origin, cheeses + [player_origin])
 
 # Graph
-
 def glouton(origin, nodes_list):
     nl = nodes_list.copy()
     current = origin
     dij = Dijkstra(maze)
-    path = ""
+    path = []
     dist = 0
 
     while nl:
@@ -46,83 +42,18 @@ def glouton(origin, nodes_list):
         r.sort()
         current = r[0][2]
         dist += r[0][0]
-        path += r[0][1]
+        path.append(r[0][1])
         nl.remove(current)
 
     return (dist, path)
 
-X = []
-T1 = []
-T2 = []
-T3 = []
+paths = glouton(player_origin, cheeses)
+paths2 = glouton(opponent_origin, cheeses)
 
-T11 = []
-T22 = []
-T33 = []
-for k in range(2, len(cheeses)):
-    print(k)
-    t = time.clock()
-    X.append(k)
+mg = MazeGenerator(mazeMap, w, h)
+mg.showNodes(cheeses)
 
-    ra = rd.randint(0, len(cheeses))
-    ra2 = (ra + k) % len(cheeses)
-    ch = cheeses[min(ra, ra2) : max(ra, ra2)]
-    print(ch)
+mg.showPath(player_origin, paths[1], color='red')
+mg.showPath(opponent_origin, paths2[1], color='blue')
 
-    # Glouton
-    d, p1 = glouton(player_origin, ch)
-    T1.append(time.clock() - t)
-    T11.append(d)
-
-    # 2-opt
-    t = time.clock()
-    to = TwoOPT(maze)
-    to.setOrigin(player_origin)
-    to.setGoals(ch)
-    to.process()
-
-    d, p = to.getResult()
-    T2.append(time.clock() - t)
-    T22.append(d)
-
-
-    # Ants
-    f = Fourmis(maze, player_origin, ch)
-    p3 = f.process()
-    p4 = ""
-    d2 = 0
-    for k in range(len(p) - 1):
-        p4 += maze.pathMetagraph[p[k]][p[k + 1]]
-        d2 += maze.distanceMetagraph[p[k]][p[k + 1]]
-
-    T33.append(d2)
-
-    if k == 9:
-        mg = MazeGenerator(mazeMap, w, h)
-        mg.showNodes(cheeses)
-        mg.showPath(player_origin, p1)
-        mg.show()
-        p2 = ""
-        for k in range(len(p) - 1):
-            p2 += maze.pathMetagraph[p[k]][p[k+1]]
-
-        print(p2)
-
-        mg = MazeGenerator(mazeMap, w, h)
-        mg.showNodes(cheeses)
-        mg.showPath(player_origin, p2, color="grey")
-        mg.show()
-
-        mg = MazeGenerator(mazeMap, w, h)
-        mg.showNodes(cheeses)
-
-        mg.showPath(player_origin, p4, color="blue")
-        mg.show()
-
-
-print(T11)
-print(T22)
-plt.plot(X, T11, color='red')
-plt.plot(X, T22, color='black')
-plt.plot(X, T33, color='black')
-plt.show()
+mg.show()
