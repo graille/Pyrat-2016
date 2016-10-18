@@ -89,13 +89,15 @@ class Engine:
             self.maze.addNodeToMetagraph(self.opponent.location, self.CURRENT_CHEESES_LOCATION + [self.player.location])
 
             # If we need to create a path
-            if not self.player.path or self.player.destination not in self.CURRENT_CHEESES_LOCATION:
-                # We are at destination, we activate the checker
+            if not self.player.path or (self.player.location != self.player.destination and self.player.destination not in self.CURRENT_CHEESES_LOCATION):
+                # We activate the checker
                 self.CHECKER = True
 
                 if self.player.waitingPaths:
+                    # TODO : Ici, il y a une erreur, si l'enemie a manger le fromage qu'on cherche, car on a un chemin faux, solution : séparer la condition juste au dessus en plusieurs sous-cas
                     self.player.path = self.player.waitingPaths[0]
                     self.player.waitingPaths = self.player.waitingPaths[1::] if (len(self.player.waitingPaths) > 1) else []
+                    self.player.destination = self.player.path[-1]
                 else:
                     # Update clusters rentability
                     self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION, True)
