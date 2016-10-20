@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Codé et maintenu par Thibault PIANA
+
+
+# TODO :
+        # - Clear un chemin
+        # - Faire un gif animé automatiquement
+
 import numpy as np
+
 from tkinter import *
 import tkinter.font as tkFont
 
-class MazeGenerator():
+class MazeGenerator:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
         self.window = Tk()
         self.window.title("Maze viewer")
@@ -24,26 +32,35 @@ class MazeGenerator():
         self.WINDOW_WIDTH = int((self.window.winfo_screenheight()) * (1 - 10/100))
         self.WINDOW_HEIGHT = self.WINDOW_WIDTH
 
-        # Add Canvas
+        # Canvas
         self.canvas = Canvas(self.window, width=self.WINDOW_WIDTH, height=self.WINDOW_HEIGHT, background='white')
-        self.canvas.pack(side = LEFT, padx = 5, pady = 5)
 
+        # Logs
         pathTracerHeight = int(self.WINDOW_HEIGHT/25)
         self.pathTracer = Text(self.window, width=50, height=pathTracerHeight)
-        self.pathTracer.pack(side=RIGHT, pady=5)
 
         # Object containers
         self.nodesContainer = {}
-        self.edgesContainer = {}
+        self.edgesContainer = {} # edgesContainer[i][j][k] :
+                    # (i,j) : départ et arrivé de l'arête
+                    # k : couche de l'arête
+
+        # Container de chemins
+        self.pathContainer = {} # pathList[path_id] :
+                    # [path] : list of differents paths;
+                    # [color] : pathColor; [last_color] : color of the last edge;
+                    # [current] : current state of the path;
+                    # [layers] : couches écrites pour ce chemin (dans l'ordre)
+
+        self.CURRENT_LAYER = 0
 
         # Colors cycles
         self.PATH_COLOR = ['red', 'grey', 'green', 'blue', 'orange', 'yellow', 'pink', 'cyan4', 'cyan3', 'azure4', 'orchid']
+        self.PRE_PATH_COLOR = {'red' : 'orchid',
+                               'grey' : 'red',
+                               'green' : 'cyan4',
+                               'blue' : 'green'}
         self.CURRENT_PATH_COLOR = 0
-
-        # List of paths
-        self.LIST_WAITING_PATHS = []
-        self.LIST_CURRENT_PATHS = []
-        self.LIST_COLORS_PATH = []
 
         # Generation
         self.generate()
@@ -52,14 +69,16 @@ class MazeGenerator():
         font = tkFont.Font(family='Helvetica', size=6)
 
         # Fill edges container
-        for n in self.nodes:
-            self.edgesContainer[n] = {}
+        for i in self.nodes:
+            self.edgesContainer[i] = {}
+            for j in self.nodes:
+                self.edgesContainer[i][j] = {}
 
         # Generate edges
         for i in self.nodes:
             for j in self.nodes:
                 if self.getDistance(i, j) != np.inf and i != j:
-                    self.generateEdge(i, j, self.getDistance(i, j))
+                    self.generateEdge(i, j, self.getDistance(i, j), 'black', 0)
 
         # Generate nodes
         for n in self.nodes:
@@ -74,33 +93,63 @@ class MazeGenerator():
         item = self.canvas.create_oval(x - size, y - size, x + size, y + size, fill=color)
         self.nodesContainer[pos] = item
 
-
-    def generateEdge(self, i, j, size = 1, color = 'black'):
+    def generateEdge(self, i, j, size = 1, color = 'black', layer = 0):
         x1, y1 = self.convertToCord(i)
         x2, y2 = self.convertToCord(j)
 
-        # Create item
+        # Création de l'arête
         item = self.canvas.create_line(x1, y1, x2, y2, width=size, fill=color)
-        self.edgesContainer[i][j], self.edgesContainer[j][i] = item, item
+        self.edgesContainer[i][j][layer], self.edgesContainer[j][i][layer] = item, item
 
-    def generateButtons(self, i):
+    def generateButtons(self, path_id):
+        # Declaration des boutons de contôles de la couche layer
+        b1 = Button(self.window, text="<< (Reculer)", width=10, command= lambda: self.showPreviousPath(path_id))
+        b2 = Button(self.window, text=">> (Avancer)", width=10, command= lambda: self.showNextPath(path_id))
 
-        b1 = Button(self.window, text="<", command= lambda: self.showPreviousPath(i))
-        b2 = Button(self.window, text=">", command= lambda: self.showNextPath(i))
+        # On affiche
+        Label(self.window, text="Chemin n°" + repr(path_id)).grid(column=1, row=path_id, sticky=W)
+        b1.grid(row=path_id, column=2)
+        b2.grid(row=path_id, column=3)
 
-        b1.pack()
-        b2.pack()
+    def showNextPath(self, path_id):
+        if self.pathContainer[path_id]['current'] < (len(self.pathContainer[path_id]['path']) - 1):
+            # On remet la couleur naturelle du chemin actuel
+            if self.pathContainer[path_id]['current'] >= 0:
+                P = self.pathContainer[path_id]['path'][self.pathContainer[path_id]['current']]
+                layer = self.pathContainer[path_id]['layers'][-1]
+                for k in range(len(P) - 1):
+                    self.canvas.itemconfig(self.edgesContainer[P[k]][P[k+1]][layer], fill=self.pathContainer[path_id]['color'])
 
-    def showNextPath(self, i):
-        print(self.LIST_COLORS_PATH[i])
-        if self.LIST_CURRENT_PATHS[i] < (len(self.LIST_WAITING_PATHS[i]) - 1):
-            self.LIST_CURRENT_PATHS[i] += 1
-            self.showPath(self.LIST_WAITING_PATHS[i][self.LIST_CURRENT_PATHS[i]], color = self.LIST_COLORS_PATH[i])
+            # On écrit sur une nouvelle couche
+            self.CURRENT_LAYER += 1
+            self.pathContainer[path_id]['layers'].append(self.CURRENT_LAYER)
 
-    def showPreviousPath(self, i):
-        if self.LIST_CURRENT_PATHS[i] > -1:
-            self.unshowPath(self.LIST_WAITING_PATHS[i][self.LIST_CURRENT_PATHS[i]])
-            self.LIST_CURRENT_PATHS[i] -= 1
+            # On écrit l'arête sur cette nouvelle couche
+            self.pathContainer[path_id]['current'] += 1
+            P = self.pathContainer[path_id]['path'][self.pathContainer[path_id]['current']]
+            self.writePath(P, 10, self.pathContainer[path_id]['last_color'], self.CURRENT_LAYER)
+
+            # On affiche un log
+            self.writeLog("Chemin de " + repr(P[0]) + " à " + repr(P[-1]))
+        else:
+            self.writeLog("Fin du chemin " + repr(self.pathContainer[path_id]['color']))
+
+    def showPreviousPath(self, path_id):
+        if self.pathContainer[path_id]['current'] > -1:
+            self.deletePath(self.pathContainer[path_id]['path'][self.pathContainer[path_id]['current']], self.pathContainer[path_id]['layers'][-1])
+
+            # On modifie l'arête courante
+            self.pathContainer[path_id]['current'] -= 1
+
+            if self.pathContainer[path_id]['current'] >= 0:
+                # On enleve la dernière couche de la liste
+                self.pathContainer[path_id]['layers'].pop()
+
+                # On remet le chemin précédent dans sa couleur intermédiaire
+                P = self.pathContainer[path_id]['path'][self.pathContainer[path_id]['current']]
+                layer = self.pathContainer[path_id]['layers'][-1]
+                for k in range(len(P) - 1):
+                    self.canvas.itemconfig(self.edgesContainer[P[k]][P[k+1]][layer], fill=self.pathContainer[path_id]['last_color'])
 
     def getDistance(self, from_location, to_location):
         try:
@@ -149,6 +198,20 @@ class MazeGenerator():
             self.canvas.coords(self.nodesContainer[n], x - size, y - size, x + size, y + size)
             self.canvas.itemconfig(self.nodesContainer[n], fill=color)
 
+    def writePath(self, P, size, color, layer):
+        for k in range(len(P) - 1):
+                self.generateEdge(P[k], P[k + 1], size, color, layer)
+
+        return P[-1]  # Return the last point
+
+    def writeLog(self, log):
+        self.pathTracer.insert(END, log + '\n')
+        self.pathTracer.see(END)
+
+    def deletePath(self, P, layer):
+        for k in range(len(P) - 1):
+            self.canvas.delete(self.edgesContainer[P[k]][P[k + 1]][layer])
+
     def showPath(self, *args, **kwargs):
         """
         Ecrit un chemin sur le graph
@@ -163,10 +226,11 @@ class MazeGenerator():
         # List case
         is_list = False
 
+        # Si c'est un chemin avec origine + mouvements
         if len(args) == 2:
             if not isinstance(args[1], list):
                 P = self.getPath(args[0], args[1])
-            else: # Si c'est une suite de chemin
+            else:  # Si c'est une suite de chemin
                 is_list = True
                 current, P_list = args[0], []
                 for k in range(len(args[1])):
@@ -174,29 +238,48 @@ class MazeGenerator():
                     current = P[-1]
                     P_list.append(P)
 
+        # Si c'est un chemin avec liste de noeuds adjacents
         elif len(args) == 1 and isinstance(args[0], list) and len(args[0]) > 0:
             if not isinstance(args[0][0], list):
                 P = args[0]
-            else:
+            else:  # Si c'est une suite de chemin
                 is_list = True
                 P_list = args[0]
 
+        # Ici :
+            # Si c'est un chemin simple, P existe et le contient, et is_list = False
+            # Si c'est une série de chemin, P_list existe et la contient, et is_list = True
+
         if is_list:
-            self.LIST_WAITING_PATHS.append(P_list)
-            self.LIST_CURRENT_PATHS.append(-1)
-            self.LIST_COLORS_PATH.append(color)
+            # On détermine un IDpour le chemin
+            path_id = len(list(self.pathContainer.keys()))
 
-            self.generateButtons(len(self.LIST_WAITING_PATHS) - 1)
+            # On enregistre la série de chemin pour pouvoir l'exploiter avec les boutons plus tard
+            self.pathContainer[path_id] = {}
+            self.pathContainer[path_id]['path'] = P_list
+            self.pathContainer[path_id]['current'] = -1
+            self.pathContainer[path_id]['color'] = color
+            self.pathContainer[path_id]['layers'] = []
+
+            # Détermination de la pré-couleur
+            try:
+                self.pathContainer[path_id]['last_color'] = self.PRE_PATH_COLOR[color]
+            except KeyError:
+                self.pathContainer[path_id]['last_color'] = 'red'
+
+            # On génère les dits boutons
+            self.generateButtons(path_id)
         else:
-            for k in range(len(P) - 1):
-                self.canvas.itemconfig(self.edgesContainer[P[k]][P[k + 1]], width=size, fill=color)
+            # On affiche directement le chemin
+            self.writePath(P, size, color, self.CURRENT_LAYER)
 
-            self.pathTracer.insert(END, "From " + repr(P[0]) + " to " + repr(P[-1]) + " (" + color + ")"'\n')
-            return P[-1] # Return the last point
-
-    def unshowPath(self, path):
-        for k in range(len(path) - 1):
-            self.canvas.itemconfig(self.edgesContainer[path[k]][path[k + 1]], width=self.DEFAULT_EDGE_SIZE, fill='black')
+            # On augmente la couche
+            self.CURRENT_LAYER += 1
 
     def show(self):
+        rows = len(list(self.pathContainer.keys()))
+        self.pathTracer.grid(column = 1, row=rows, columnspan=3)
+        self.canvas.grid(row = 0, column = 0, rowspan=(rows+1))
+
         self.window.mainloop()
+

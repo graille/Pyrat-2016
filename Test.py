@@ -49,11 +49,13 @@ def glouton(origin, nodes_list):
 
 paths = glouton(player_origin, cheeses)
 paths2 = glouton(opponent_origin, cheeses)
+paths3 = glouton(cheeses[0], cheeses[1::])
 
 mg = MazeGenerator(mazeMap, w, h)
 mg.showNodes(cheeses)
 
 mg.showPath(player_origin, paths[1], color='red')
 mg.showPath(opponent_origin, paths2[1], color='blue')
+mg.showPath(cheeses[0], paths3[1][0], color='grey')
 
 mg.show()
