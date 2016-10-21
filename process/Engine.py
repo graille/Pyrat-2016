@@ -150,7 +150,7 @@ class Engine:
                             and (not self.inPath(self.player, n)) \
                             and self.factors[n] < self.DF_MAX\
                             and path_to_n:
-                        self.addToPath(self.player, path_to_n)
+                        self.addToPath(self.player, path_to_n, n)
                         self.CHECKER = False
                         break
 
