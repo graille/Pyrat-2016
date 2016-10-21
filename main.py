@@ -38,11 +38,7 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
     # Update
     engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
     action = engine.turn()
-
-    mg = MazeViewer(mazeMap, mazeWidth, mazeHeight)
-    mg.showNodes(piecesOfCheese)
-    mg.showPath([engine.player.path] + engine.player.waitingPaths)
-    mg.show()
+    
     print('[' + repr(action) + ']')
     return action
 

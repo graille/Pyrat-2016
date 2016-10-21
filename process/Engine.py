@@ -114,13 +114,14 @@ class Engine:
 
                     for k in range(len(self.cluster)):
                         r, nb = 0, 0
-                        for n in self.cluster[k][1]:
-                            r += 1
-                            nb += self.factors[n]
+                        if self.cluster[k][1]: # If the cluster is not empty
+                            for n in self.cluster[k][1]:
+                                r += 1
+                                nb += self.factors[n]
 
-                        self.clusterRentability.append(len(self.cluster[k]) / (float(nb / r)))
-                        if self.clusterRentability[-1] > b_r:
-                            b_r, b_k = self.clusterRentability[-1], k
+                            self.clusterRentability.append(len(self.cluster[k]) / (float(nb / r)))
+                            if self.clusterRentability[-1] > b_r:
+                                b_r, b_k = self.clusterRentability[-1], k
 
                     # Calculate Path
                     to = TwoOPT(self.maze)
@@ -150,7 +151,7 @@ class Engine:
                                 and (not self.inPath(self.player, n)) \
                                 and self.factors[n] < self.DF_MAX\
                                 and path_to_n:
-                            self.addToPath(self.player, path_to_n)
+                            self.addToPath(self.player, path_to_n, n)
                             self.CHECKER = False
                             break
 
@@ -219,8 +220,8 @@ class Engine:
         for cheese in self.CURRENT_CHEESES_LOCATION:
             if cheese not in piecesOfCheese:
                 for k in range(len(self.cluster)):
-                    if cheese in self.cluster[k]:
-                        self.cluster[k].remove(cheese)
+                    if cheese in self.cluster[k][1]:
+                        self.cluster[k][1].remove(cheese)
 
         # Miscellaneous
         self.CURRENT_CHEESES_NB = len(piecesOfCheese)
