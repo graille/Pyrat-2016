@@ -108,11 +108,10 @@ class Engine:
                         for n in self.cluster[k]:
                             r += 1
                             nb += self.factors[n]
-                        self.clusterRentability.append(len(self.cluster[k]) / (float(nb / r)))
 
+                        self.clusterRentability.append(len(self.cluster[k]) / (float(nb / r)))
                         if self.clusterRentability[-1] > b_r:
-                            b_r = self.clusterRentability[-1]
-                            b_k = k
+                            b_r, b_k = self.clusterRentability[-1], k
 
                     # Calculate Path
                     to = TwoOPT(self.maze)
@@ -123,7 +122,7 @@ class Engine:
                     d, p = to.getResult()
 
                     # Set path
-                    self.player.path = self.maze.concatPaths(self.maze.convertMetaPathToRealPaths(p))
+                    self.player.waitingPaths = self.maze.convertMetaPathToRealPaths(p)
             else:
                 # Check around player
                 if self.CHECKER:
@@ -179,15 +178,24 @@ class Engine:
             self.INITIAL_CHEESES = piecesOfCheese
 
             # Create clusters
+            nb_cluster = int(len(piecesOfCheese) / 4 - 1)
             alg = K_Means(self.maze)
             alg.setNodes(piecesOfCheese)
-            alg.setK(9)
+            alg.setK(nb_cluster)
+
+            print("# " + repr(nb_cluster) + " clusters have been generated")
 
             result = alg.process((timeAllowed - (time.clock() - b_t)) * (1/3))
+            tot_cheeses = 0
 
-            for i in range(len(result[1])):
+            for i in range(nb_cluster):
                 self.cluster.append((len(result[1][i]), result[1][i]))
                 self.clusterMiddle.append(result[0][i])
+                tot_cheeses += len(result[1][i])
+
+            # Check the total number of cheeses
+            if not tot_cheeses == len(piecesOfCheese):
+                print("# All cheeses has not been put in a cluster !!")
 
             # TODO : vérifié le nombre total de fromage, ajouté un cluster spécial pur les fromages non référencés
 
@@ -218,14 +226,17 @@ class Engine:
         print("# Update executed in " + repr(time.clock() - b_t) + " seconds")
 
     # Factors management
-    def calculateFactors(self, nodes, metaGraph = False):
-        if metaGraph:
+    def calculateFactors(self, nodes):
+        try:
             # Calculate factors
             factors = {}
 
             for c in nodes:
                 factors[c] = float(self.maze.distanceMetagraph[self.player.location][c] / self.maze.distanceMetagraph[self.opponent.location][c])
-        else:
+
+            return factors
+        except KeyError:
+            print("# Factors calculated without metaGraph")
             alg = Dijkstra(self.maze)
 
             # Calculate for player
@@ -247,4 +258,4 @@ class Engine:
             for c in nodes:
                 factors[c] = float(playerResult[c] / opponentResult[c])
 
-        return factors
+            return factors
