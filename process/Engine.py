@@ -139,20 +139,19 @@ class Engine:
                         self.player.waitingPaths = self.player.waitingPaths[1::] if (len(self.player.waitingPaths) > 1) else []
                         self.player.destination = self.player.path[-1]
 
-            else:
-                # Check around player
-                if self.CHECKER:
-                    for n in self.CURRENT_CHEESES_LOCATION:
-                        dist_to_n, path_to_n = self.maze.getFatestPath(self.player.location, n)
+            # Check around player
+            if self.CHECKER:
+                for n in self.CURRENT_CHEESES_LOCATION:
+                    dist_to_n, path_to_n = self.maze.getFatestPath(self.player.location, n)
 
-                        if dist_to_n <= self.CHECKER_RADIUS \
-                                and n != self.player.destination \
-                                and (not self.inPath(self.player, n)) \
-                                and self.factors[n] < self.DF_MAX\
-                                and path_to_n:
-                            self.addToPath(self.player, path_to_n)
-                            self.CHECKER = False
-                            break
+                    if dist_to_n <= self.CHECKER_RADIUS \
+                            and n != self.player.destination \
+                            and (not self.inPath(self.player, n)) \
+                            and self.factors[n] < self.DF_MAX\
+                            and path_to_n:
+                        self.addToPath(self.player, path_to_n)
+                        self.CHECKER = False
+                        break
 
         # Return path
         print("# Turn executed in " + repr(time.clock() - t) + " seconds")
