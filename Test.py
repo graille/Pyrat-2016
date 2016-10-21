@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-from debug.Debug import *
 from process.Engine import *
 from algorithms.Fourmis import *
 from algorithms.TwoOPT import *

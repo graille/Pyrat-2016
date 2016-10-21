@@ -16,9 +16,8 @@ sys.path.insert(0, new_sys_entry)
 from process.Engine import *
 
 # Debug
-from debug.Debug import *
 from algorithms.Kmeans import *
-from debug.MazeGenerator import *
+from debug.MazeViewer import *
 
 # Initialize vars
 TEAM_NAME = "Paul La Souris"
@@ -38,8 +37,13 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
 
     # Update
     engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
+    action = engine.turn()
 
-    print('[' + action + ']')
+    mg = MazeViewer(mazeMap, mazeWidth, mazeHeight)
+    mg.showNodes(piecesOfCheese)
+    mg.showPath([engine.player.path] + engine.player.waitingPaths)
+    mg.show()
+    print('[' + repr(action) + ']')
     return action
 
 if __name__ == "__main__":
@@ -351,3 +355,4 @@ if __name__ == "__main__":
     opponent_origin = (0, 24)
 
     preprocessing(mazeMap, w, h, player_origin, opponent_origin, cheeses, 3)
+    turn(mazeMap, w, h, player_origin, opponent_origin, 0, 0, cheeses, 0.1)

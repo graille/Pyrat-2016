@@ -82,21 +82,22 @@ class Astar:
 
             return False
         else:
-            return (0, "")
+            return (0, [])
 
     def reconstruct_path(self, current):
-        total_path = ""
+        litteral_path = ""
         total_distance = 0
-        path = []
+        real_path = []
         while current != self.origin:
             new = self.nPredecessor[current]
 
-            total_path += self.graph.getMove(new, current)
+            litteral_path += self.graph.getMove(new, current)
             total_distance += self.graph.getDistance(current, new)
-            path.append(current)
+            real_path.append(current)
             current = new
-        path.append(current)
-        return (total_distance, total_path[::-1])
+
+        real_path.append(current)
+        return (total_distance, real_path[::-1])
 
     def getResult(self):
         return self.result

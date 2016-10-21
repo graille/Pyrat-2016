@@ -70,17 +70,21 @@ class Dijkstra:
             self.pathArray[n2] = n1
 
     def reconstructPath(self, node):
-        total_path = ""
+        litteral_path = ""
         total_distance = 0
         current = node
-
+        real_path = []
         while current != self.origin:
             new = self.pathArray[current]
-            total_path += self.graph.getMove(new, current)
+
+            litteral_path += self.graph.getMove(new, current)
             total_distance += self.graph.getDistance(current, new)
+            real_path.append(current)
+
             current = new
 
-        return (total_distance, total_path[::-1])
+        real_path.append(current)
+        return (total_distance, real_path[::-1])
 
     def getResult(self, node = None):
         if self.goal != self.origin:
@@ -89,4 +93,4 @@ class Dijkstra:
             else:
                 return self.reconstructPath(node)
         else:
-            return (0, "")
+            return (0, [])

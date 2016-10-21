@@ -21,7 +21,7 @@ class TwoOPT:
         self.origin = origin
 
     def setGoals(self, goals):
-        self.goals = goals
+        self.goals = goals.copy()
         self.NB_OF_NODES = len(goals) + 1
 
     def setAllowedTime(self, time):
@@ -53,7 +53,7 @@ class TwoOPT:
         while improve and (self.allowedTime > (time.clock() - t)):
             improve = False
 
-            for i in range(self.NB_OF_NODES): #range(self.NB_OF_NODES) optimize the loop, range(1, self.NB_OF_NODES - 1) optimize a way, but keep the last point at is place
+            for i in range(self.NB_OF_NODES):
                 for j in range(self.NB_OF_NODES):
                     if j in [(i - 1) % self.NB_OF_NODES, i, (i + 1) % self.NB_OF_NODES]:
                         continue

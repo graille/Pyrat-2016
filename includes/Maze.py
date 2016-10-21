@@ -134,24 +134,6 @@ class Maze:
             r += path
 
         return r
-    
-    
-    # Metagraph
-    def fastestPathToNode(self, origin, goal):
-        """
-        Find the fastest path from origin to goal
-        :param origin:
-        :param goal:
-        :return:
-        """
-        al = Astar(self)
-
-        al.setOrigin(origin)
-        al.setGoal(goal)
-
-        al.process()
-
-        return al.getResult()
 
     def createMetaGraph(self, cheeses_list):
         """
@@ -199,3 +181,30 @@ class Maze:
                 result = dij.getResult(n)
                 self.distanceMetagraph[node][n], self.distanceMetagraph[n][node] = result[0], result[0]
                 self.pathMetagraph[node][n], self.pathMetagraph[n][node] = result[1], result[1]
+
+    # Algoritms application
+    def getFatestPath(self, origin, goal):
+        try:
+            return (self.distanceMetagraph[origin][goal], self.pathMetagraph[origin][goal])
+        except KeyError:
+            print("## Need to calculate the fastest path from " + repr(origin) + " to " + repr(goal))
+            # Calculate path and distance with Astar
+            dij = Astar(self)
+            dij.setOrigin(origin)
+            dij.setGoal(goal)
+            dij.process()
+
+            d, p = dij.getResult()
+            return (d, p)
+
+    def getNearestNode(self, origin, nodes):
+        dij = Dijkstra(self)
+        dij.setOrigin(origin)
+        dij.setGoal(None)
+
+        dij.process()
+
+        n_list = [dij.getResult(n) for n in nodes]
+        n_list.sort()
+
+        return n_list[0] if len(n_list) > 0 else (0, [])

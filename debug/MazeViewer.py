@@ -3,17 +3,18 @@
 
 # Codé et maintenu par Thibault PIANA
 
-
 # TODO :
         # - Clear un chemin
         # - Faire un gif animé automatiquement
+        # - Ne plus avoir besoin de spécifier la couleur : gestion automatique
 
 import numpy as np
 
 from tkinter import *
 import tkinter.font as tkFont
 
-class MazeGenerator:
+
+class MazeViewer:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
         self.window = Tk()
         self.window.title("Maze viewer")
@@ -46,11 +47,13 @@ class MazeGenerator:
                     # k : couche de l'arête
 
         # Container de chemins
-        self.pathContainer = {} # pathList[path_id] :
-                    # [path] : list of differents paths;
-                    # [color] : pathColor; [last_color] : color of the last edge;
-                    # [current] : current state of the path;
-                    # [layers] : couches écrites pour ce chemin (dans l'ordre)
+        self.pathContainer = {} # pathList[path_id][?] :
+                    # path_id : id du chemin
+                    # ? :
+                        # path : list of differents paths;
+                        # color : pathColor; [last_color] : color of the last edge;
+                        # current : current state of the path;
+                        # layers : couches écrites pour ce chemin (dans l'ordre)
 
         self.CURRENT_LAYER = 0
 
@@ -93,6 +96,8 @@ class MazeGenerator:
         item = self.canvas.create_oval(x - size, y - size, x + size, y + size, fill=color)
         self.nodesContainer[pos] = item
 
+        return item
+
     def generateEdge(self, i, j, size = 1, color = 'black', layer = 0):
         x1, y1 = self.convertToCord(i)
         x2, y2 = self.convertToCord(j)
@@ -100,6 +105,8 @@ class MazeGenerator:
         # Création de l'arête
         item = self.canvas.create_line(x1, y1, x2, y2, width=size, fill=color)
         self.edgesContainer[i][j][layer], self.edgesContainer[j][i][layer] = item, item
+
+        return item
 
     def generateButtons(self, path_id):
         # Declaration des boutons de contôles de la couche layer
@@ -127,7 +134,7 @@ class MazeGenerator:
             # On écrit l'arête sur cette nouvelle couche
             self.pathContainer[path_id]['current'] += 1
             P = self.pathContainer[path_id]['path'][self.pathContainer[path_id]['current']]
-            self.writePath(P, 10, self.pathContainer[path_id]['last_color'], self.CURRENT_LAYER)
+            self.writePath(P, self.pathContainer[path_id]['size'], self.pathContainer[path_id]['last_color'], self.CURRENT_LAYER)
 
             # On affiche un log
             self.writeLog("Chemin de " + repr(P[0]) + " à " + repr(P[-1]))
@@ -191,12 +198,19 @@ class MazeGenerator:
         return (y,x)
 
     # Items writer
-    def showNodes(self, nodes, color = "blue", size = 11):
+    def showNodes(self, nodes, **kwargs):
+        color = kwargs['color'] if 'color' in kwargs else 'blue'
+        size = kwargs['size'] if 'size' in kwargs else 11
+
         for n in nodes:
             x, y = self.convertToCord(n)
+            try:
+                item = self.nodesContainer[n]
+                self.canvas.coords(item, x - size, y - size, x + size, y + size)
+            except KeyError:
+                item = self.generateNode(n, size, color)
 
-            self.canvas.coords(self.nodesContainer[n], x - size, y - size, x + size, y + size)
-            self.canvas.itemconfig(self.nodesContainer[n], fill=color)
+            self.canvas.itemconfig(item, fill=color)
 
     def writePath(self, P, size, color, layer):
         for k in range(len(P) - 1):
@@ -251,7 +265,7 @@ class MazeGenerator:
             # Si c'est une série de chemin, P_list existe et la contient, et is_list = True
 
         if is_list:
-            # On détermine un IDpour le chemin
+            # On détermine un ID pour le chemin
             path_id = len(list(self.pathContainer.keys()))
 
             # On enregistre la série de chemin pour pouvoir l'exploiter avec les boutons plus tard
@@ -259,6 +273,7 @@ class MazeGenerator:
             self.pathContainer[path_id]['path'] = P_list
             self.pathContainer[path_id]['current'] = -1
             self.pathContainer[path_id]['color'] = color
+            self.pathContainer[path_id]['size'] = size
             self.pathContainer[path_id]['layers'] = []
 
             # Détermination de la pré-couleur
@@ -282,4 +297,3 @@ class MazeGenerator:
         self.canvas.grid(row = 0, column = 0, rowspan=(rows+1))
 
         self.window.mainloop()
-
