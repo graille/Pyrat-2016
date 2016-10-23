@@ -125,18 +125,19 @@ class Engine:
                                 b_r, b_k = self.clusterRentability[-1], k
 
                     # Calculate Path
-                    d, p = np.inf, []
+                    d, p = np.inf, [] # A remplacer par un gluton plus tard
                     k, init = 0, time.clock()
 
                     while (time.clock() - t) < (self.TIME_ALLOWED * 70/100):
                         to = TwoOPT(self.maze, self.player.location, self.cluster[b_k][1], self.TIME_ALLOWED * 20/100).process()
                         d_t, p_t = to.getResult(self.player.location)
+                        print("## Test " + repr(k) + ", distance : " + repr(d_t))
                         if d_t < d:
                             d, p = d_t, p_t
 
                         k += 1
 
-                    print("# Path of " + repr(d) + "finded in " + repr(time.clock() - init))
+                    print("# Path of " + repr(d) + " finded in " + repr(time.clock() - init))
 
                     # Set path
                     self.player.waitingPaths = self.maze.convertMetaPathToRealPaths(p)
