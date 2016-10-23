@@ -128,7 +128,7 @@ class Engine:
                     d, p = np.inf, []
                     k, init = 0, time.clock()
 
-                    while (time.clock() - t) < (self.TIME_ALLOWED * 70/100)
+                    while (time.clock() - t) < (self.TIME_ALLOWED * 70/100):
                         to = TwoOPT(self.maze, self.player.location, self.cluster[b_k][1], self.TIME_ALLOWED * 20/100).process()
                         d_t, p_t = to.getResult(self.player.location)
                         if d_t < d:
