@@ -90,8 +90,9 @@ class Engine:
             self.maze.addNodeToMetagraph(self.opponent.location, self.CURRENT_CHEESES_LOCATION + [self.player.location])
 
             # If we need to create a path
-            if self.player.destination not in self.CURRENT_CHEESES_LOCATION:  # Si l'adversaire a déja manger notre fromage
+            if self.player.destination not in self.CURRENT_CHEESES_LOCATION:  # Si l'adversaire a déja manger notre fromage ou qu'il se trouve juste devant nous (une avance par rapport a nous)
                 # On recalcul tout
+                # TODO : si on est juste derriere l'adversaire
                 self.player.path = []
                 self.player.waitingPaths = []
 
@@ -125,23 +126,22 @@ class Engine:
 
                     # Calculate Path
                     d, p = np.inf, []
-                    k = 0
+                    k, init = 0, time.clock()
 
-                    while self.TIME_ALLOWED - (time.clock() - t) > (self.TIME_ALLOWED / 5)
-                        to = TwoOPT(self.maze, self.player.location, self.cluster[b_k][1], self.TIME_ALLOWED / 6).process()
+                    while (time.clock() - t) < (self.TIME_ALLOWED * 70/100)
+                        to = TwoOPT(self.maze, self.player.location, self.cluster[b_k][1], self.TIME_ALLOWED * 20/100).process()
                         d_t, p_t = to.getResult(self.player.location)
                         if d_t < d:
                             d, p = d_t, p_t
 
                         k += 1
 
-                    print("# Path of " + repr(d) + "finded")
+                    print("# Path of " + repr(d) + "finded in " + repr(time.clock() - init))
 
                     # Set path
-                    #path_to_cluster = self.maze.getNearestNode(self.player.location, self.cluster[b_k][1])[1][1::]
                     self.player.waitingPaths = self.maze.convertMetaPathToRealPaths(p)
 
-                    if len(self.player.waitingPaths) > 0:
+                    if len(self.player.waitingPaths) > 0 and len(self.player.path) <= 1:
                         self.player.path = self.player.waitingPaths[0]
                         self.player.waitingPaths = self.player.waitingPaths[1::] if (len(self.player.waitingPaths) > 1) else []
                         self.player.destination = self.player.path[-1]
@@ -207,7 +207,7 @@ class Engine:
 
             print("# Clusters : " + repr(alg.k) + " clusters have been generated")
 
-            result = alg.process((timeAllowed - (time.clock() - b_t)) * (1/3))
+            result = alg.process((timeAllowed - (time.clock() - b_t)) * (80/100))
             tot_cheeses = 0
 
             for i in range(nb_cluster):
@@ -229,6 +229,10 @@ class Engine:
                 for k in range(len(self.cluster)):
                     if cheese in self.cluster[k][1]:
                         self.cluster[k][1].remove(cheese)
+
+                    # If the cluster is empty, We delete it
+                    if len(self.cluster[k]) == 0:
+                        self.cluster.remove(self.cluster[k])
 
         # Miscellaneous
         self.CURRENT_CHEESES_NB = len(piecesOfCheese)
@@ -255,7 +259,7 @@ class Engine:
             factors = {}
 
             for n in nodes:
-                factors[c] = float(self.maze.distanceMetagraph[self.player.location][n] / self.maze.distanceMetagraph[self.opponent.location][n])
+                factors[n] = float(self.maze.distanceMetagraph[self.player.location][n] / self.maze.distanceMetagraph[self.opponent.location][n])
 
             return factors
         except KeyError:
