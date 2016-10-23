@@ -28,7 +28,7 @@ class K_Means:
 
     def getDistance(self, i, j):
         p = random.randint(0,100)
-        if p < 0:
+        if p < 2:
             x1, y1 = round(i[0]), round(i[1])
             x2, y2 = round(j[0]), round(j[1])
 

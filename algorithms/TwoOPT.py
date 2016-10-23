@@ -6,7 +6,7 @@ import time
 
 
 class TwoOPT:
-    def __init__(self, maze, origin = None, goals = None):
+    def __init__(self, maze, origin = None, goals = None, allowedTime = 2):
         self.maze = maze
         self.origin = origin if origin else ()
         self.goals = goals if goals else ()
@@ -14,8 +14,7 @@ class TwoOPT:
         self.NB_OF_NODES = len(goals) + 1 if goals else 0
         self.path = []
 
-        self.improveAlg = False
-        self.allowedTime = np.inf
+        self.allowedTime = allowedTime
 
     def setOrigin(self, origin):
         self.origin = origin
@@ -42,7 +41,6 @@ class TwoOPT:
     def process(self):
         self.algorithm()
 
-
     def algorithm(self):
         """
         Calculate a path with the 2-opt algorithm
@@ -64,7 +62,17 @@ class TwoOPT:
                         #print("Current path " + repr(self.getResult()))
                         improve = True
 
-    def getResult(self):
+    def shiftArray(self, a):
+        a.append(a[0])
+        a = a[1::]
+
+        return a
+
+    def getResult(self, first_node = None):
+        if first_node and first_node in self.path:
+            while self.path[0] != first_node:
+                self.path = self.shiftArray(self.path)
+
         return (self.getResultDistance(), self.getResultPath())
 
     def getResultPath(self):

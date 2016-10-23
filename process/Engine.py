@@ -124,15 +124,21 @@ class Engine:
                                 b_r, b_k = self.clusterRentability[-1], k
 
                     # Calculate Path
-                    to = TwoOPT(self.maze)
-                    to.setOrigin(self.player.location)
-                    to.setGoals(self.cluster[b_k][1])
+                    d, p = np.inf, []
+                    k = 0
 
-                    to.process()
-                    d, p = to.getResult()
+                    while self.TIME_ALLOWED - (time.clock() - t) > (self.TIME_ALLOWED / 5)
+                        to = TwoOPT(self.maze, self.player.location, self.cluster[b_k][1], self.TIME_ALLOWED / 6).process()
+                        d_t, p_t = to.getResult(self.player.location)
+                        if d_t < d:
+                            d, p = d_t, p_t
+
+                        k += 1
+
+                    print("# Path of " + repr(d) + "finded")
 
                     # Set path
-                    path_to_cluster = self.maze.getNearestNode(self.player.location, self.cluster[b_k][1])[1][1::]
+                    #path_to_cluster = self.maze.getNearestNode(self.player.location, self.cluster[b_k][1])[1][1::]
                     self.player.waitingPaths = self.maze.convertMetaPathToRealPaths(p)
 
                     if len(self.player.waitingPaths) > 0:
@@ -144,11 +150,13 @@ class Engine:
             if self.CHECKER:
                 for n in self.CURRENT_CHEESES_LOCATION:
                     dist_to_n, path_to_n = self.maze.getFatestPath(self.player.location, n)
+                    dist_to_dest, path_to_dest = self.maze.getFatestPath(self.player.location, self.player.destination)
 
                     if dist_to_n <= self.CHECKER_RADIUS \
                             and n != self.player.destination \
                             and (not self.inPath(self.player, n)) \
-                            and self.factors[n] < self.DF_MAX\
+                            and self.factors[n] < self.DF_MAX \
+                            and dist_to_dest > self.CHECKER_RADIUS \
                             and path_to_n:
                         self.addToPath(self.player, path_to_n, n)
                         self.CHECKER = False
@@ -192,12 +200,12 @@ class Engine:
             self.INITIAL_CHEESES = piecesOfCheese
 
             # Create clusters
-            nb_cluster = int(len(piecesOfCheese) / 4 - 1)
+            nb_cluster = round(len(piecesOfCheese) / 6 - 1)
             alg = K_Means(self.maze)
             alg.setNodes(piecesOfCheese)
             alg.setK(nb_cluster)
 
-            print("# Clusters : " + repr(nb_cluster) + " clusters have been generated")
+            print("# Clusters : " + repr(alg.k) + " clusters have been generated")
 
             result = alg.process((timeAllowed - (time.clock() - b_t)) * (1/3))
             tot_cheeses = 0
@@ -236,6 +244,8 @@ class Engine:
 
         # Update radius
         self.CHECKER_RADIUS = 2
+        self.TIME_ALLOWED = timeAllowed
+
         print("# Update executed in " + repr(time.clock() - b_t) + " seconds")
 
     # Factors management
@@ -244,8 +254,8 @@ class Engine:
             # Calculate factors
             factors = {}
 
-            for c in nodes:
-                factors[c] = float(self.maze.distanceMetagraph[self.player.location][c] / self.maze.distanceMetagraph[self.opponent.location][c])
+            for n in nodes:
+                factors[c] = float(self.maze.distanceMetagraph[self.player.location][n] / self.maze.distanceMetagraph[self.opponent.location][n])
 
             return factors
         except KeyError:
