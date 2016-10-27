@@ -171,7 +171,6 @@ class Maze:
         # Create the list of unChecked nodes
         checked_list = []
 
-        t = time.clock()
         if node in self.distanceMetagraph:
             for n in nodes_list:
                 if n not in self.distanceMetagraph[node]:
