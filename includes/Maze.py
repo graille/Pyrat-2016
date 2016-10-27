@@ -164,15 +164,28 @@ class Maze:
         :return:
         """
 
-        dij = Dijkstra(self, node, None)
-        dij.process()
+        process = False
 
-        for n in nodes_list:
-            d, p = dij.getResult(n)
-            self.coupleNodesInMetagraph(node, n, d, p)
+        if node in self.distanceMetagraph:
+            for n in nodes_list:
+                if n not in self.distanceMetagraph[node]:
+                    process = True
+        else:
+            process = True
+
+        if process:
+            #print("### Add " + repr(node) + " with " + repr(nodes_list))
+            dij = Dijkstra(self, node, None)
+            dij.process()
+
+            for n in nodes_list:
+                d, p = dij.getResult(n)
+                self.coupleNodesInMetagraph(node, n, d, p)
+        #else:
+        #    print("Pas besoin a partir de " + repr(node) + " to " + repr(nodes_list))
 
     def coupleNodesInMetagraph(self, n1, n2, d, p):
-        if n1 in self.distanceMetagraph:
+        if n1 not in self.distanceMetagraph:
             self.distanceMetagraph[n1] = {}
             self.pathMetagraph[n1] = {}
 

@@ -12,7 +12,6 @@ class Rat:
 
         # Paths managers
         self.path = []
-        self.waitingPaths = []
         self.precedentNodes = []
         self.destination = None
 
@@ -23,7 +22,14 @@ class Rat:
         if new_location != self.location:
             self.precedentNodes.append(self.location)
             self.location = new_location
-    
+
+            # Update path
+            if (new_location == self.destination) and self.path:
+                self.path = self.path[1::]
+                if self.path and self.path[0][-1]:
+                    self.destination = self.path[0][-1]
+                    print("## Switch to destination " + repr(self.destination))
+
 class Player(Rat):
     pass
 

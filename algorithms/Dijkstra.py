@@ -13,7 +13,7 @@ class Dijkstra:
     def __init__(self, maze, origin = None, goal = None):
         self.graph = maze
         self.setOrigin(origin) if origin else ()
-        self.setGoal(goal) if goal else ()
+        self.setGoal(goal)
 
     def setOrigin(self, n):
         self.origin = n

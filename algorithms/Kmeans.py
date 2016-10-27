@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import random
-from algorithms.Astar import *
 import time
+import numpy as np
 
 
 class K_Means:
@@ -13,8 +12,6 @@ class K_Means:
         self.m = {}
 
         self.k = k
-        self.nodes = nodes
-        self.astar = Astar(maze)
 
         if nodes:
             self.setNodes(nodes)
@@ -26,21 +23,20 @@ class K_Means:
         self.nodes = nodes
         self.NB_NODES = len(nodes)
 
-    def getDistance(self, i, j):
-        p = random.randint(0,100)
-        if p < 0:
-            x1, y1 = round(i[0]), round(i[1])
-            x2, y2 = round(j[0]), round(j[1])
+    def getDistance(self, moy, n):
+        x1, y1 = round(moy[0]), round(moy[1])
 
-            self.astar.setOrigin((x1, y1))
-            self.astar.setGoal((x2, y2))
-            self.astar.process()
-            d = self.astar.getResult()[0]
-            return d
-        else:
-            x1, y1 = i
-            x2, y2 = j
-            return (x1 - x2) ** 2 + (y1 - y2) ** 2
+        dx1, dy1 = x1 - moy[0], y1 - moy[1]
+
+        # Add moy to metagraph
+        self.maze.addNodeToMetagraph((x1, y1), self.nodes)
+        d = self.maze.distanceMetagraph[(x1, y1)][n]
+
+        return d + np.sqrt(dx1**2 + dy1**2)
+
+        #x1, y1 = i
+        #x2, y2 = j
+        #return (x1 - x2) ** 2 + (y1 - y2) ** 2
 
     def sommeTuplesInList(self, L):
         x, y = 0, 0
@@ -66,11 +62,11 @@ class K_Means:
                     self.S[nb][i] = []
 
                     for n in self.nodes:
-                        d = self.getDistance(n, self.m[nb][i])
+                        d = self.getDistance(self.m[nb][i], n)
                         c = True
 
                         for j in range(self.k):
-                            if d > self.getDistance(n, self.m[nb][j]):
+                            if d > self.getDistance(self.m[nb][j], n):
                                 c = False
 
                         if c:

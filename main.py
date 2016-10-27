@@ -26,20 +26,24 @@ engine = None
 def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed):
     global engine
 
+    t = time.clock()
     # Initialize the game
     engine = Engine(mazeMap, mazeWidth, mazeHeight)
 
     # Update with preprocessing argument
     engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed, True)
+    print("Total preprocessing executed in " + repr(time.clock() - t))
+    print()
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
     global engine
-
+    t = time.clock()
     # Update
     engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
     action = engine.turn()
     
-    print('[' + repr(action) + ']')
+    print('[' + repr(action) + '] in ' + repr(time.clock() - t))
+    print()
     return action
 
 if __name__ == "__main__":
