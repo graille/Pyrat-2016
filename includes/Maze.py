@@ -163,24 +163,28 @@ class Maze:
         :param nodes_list:
         :return:
         """
-        dij = Dijkstra(self)
 
-        dij.setOrigin(node)
-        dij.setGoal(None)
+        dij = Dijkstra(self, node, None)
         dij.process()
 
-        try:
-            keys = self.distanceMetagraph[node].keys()
-        except KeyError:
-            keys = []
-            self.distanceMetagraph[node] = {}
-            self.pathMetagraph[node] = {}
-
         for n in nodes_list:
-            if n not in keys:  # If we have never calculate the distance
-                result = dij.getResult(n)
-                self.distanceMetagraph[node][n], self.distanceMetagraph[n][node] = result[0], result[0]
-                self.pathMetagraph[node][n], self.pathMetagraph[n][node] = result[1], result[1]
+            d, p = dij.getResult(n)
+            self.coupleNodesInMetagraph(node, n, d, p)
+
+    def coupleNodesInMetagraph(self, n1, n2, d, p):
+        if n1 in self.distanceMetagraph:
+            self.distanceMetagraph[n1] = {}
+            self.pathMetagraph[n1] = {}
+
+        self.distanceMetagraph[n1][n2] = d
+        self.pathMetagraph[n1][n2] = p
+
+        if n2 not in self.distanceMetagraph:
+            self.distanceMetagraph[n2] = {}
+            self.pathMetagraph[n2] = {}
+
+        self.distanceMetagraph[n2][n1] = d
+        self.pathMetagraph[n2][n1] = p
 
     # Algoritms application
     def getFatestPath(self, origin, goal):
@@ -188,13 +192,16 @@ class Maze:
             return (self.distanceMetagraph[origin][goal], self.pathMetagraph[origin][goal])
         except KeyError:
             print("## Need to calculate the fastest path from " + repr(origin) + " to " + repr(goal))
+
             # Calculate path and distance with Astar
-            dij = Astar(self)
-            dij.setOrigin(origin)
-            dij.setGoal(goal)
+            dij = Astar(self, origin, goal)
             dij.process()
 
             d, p = dij.getResult()
+
+            # Addto metagraph for a next time
+            self.coupleNodesInMetagraph(origin, goal, d, p)
+
             return (d, p)
 
     def getNearestNode(self, origin, nodes):
