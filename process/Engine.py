@@ -51,19 +51,20 @@ class Engine:
         # In case of particular reaction
         if self.player.destination and \
                 (self.player.destination not in self.CURRENT_CHEESES_LOCATION or \
-                self.maze.distanceMetagraph[self.opponent.location][self.player.destination] < 2 or \
+                (self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= 2 and self.maze.distanceMetagraph[self.player.location][self.player.destination] > 2) or \
                 self.CURRENT_CHEESES_NB in [1, 2]):  # Si l'adversaire a déja manger notre fromage ou qu'il se trouve dans un rayon de 2 cases de celui-ci
-            self.player.path = []
-            self.player.destination = None
+            self.player.setPath(None)
 
         # If we need calculate a path
-        if not self.player.path or \
+        if (not self.player.path) or \
                 (len(self.player.path) == 1 and len(self.player.path[0]) <= 1) or \
-                not self.player.destination:
+                (not self.player.destination):
+
+            print("### No destination detected : " + repr(self.player.destination)) if not self.player.destination else ()
 
             # If there is only one cheese
             if self.CURRENT_CHEESES_NB == 1:
-                self.player.path = self.maze.getFatestPath(self.player.location, self.CURRENT_CHEESES_LOCATION[0])[1]
+                self.player.setPath([self.maze.getFatestPath(self.player.location, self.CURRENT_CHEESES_LOCATION[0])[1]])
 
             # If there are 2 cheeses
             elif self.CURRENT_CHEESES_NB == 2:
@@ -85,12 +86,14 @@ class Engine:
                     else:
                         goal = n1
 
-                self.player.path = self.maze.getFatestPath(self.player.location, goal)[1]
+                self.player.setPath([self.maze.getFatestPath(self.player.location, goal)[1]])
 
             # In other cases
             else:
                 # Update clusters rentability
                 self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
+                print("Current cheeses (" + repr(self.CURRENT_CHEESES_NB) + ") : " + repr(self.CURRENT_CHEESES_LOCATION))
+                print("Clusters : " + repr(self.cluster))
                 b_r, b_k = -1, -1
 
                 for k in range(len(self.cluster)):
@@ -108,13 +111,12 @@ class Engine:
                 d, p = np.inf, [] # A remplacer par un glouton plus tard
                 k, init = 0, time.clock()
 
-                while (time.clock() - t) < (self.TIME_ALLOWED * 90/100):
+                while (time.clock() - t) < (self.TIME_ALLOWED * 70/100):
                     # Execute twoOPT
-                    to = TwoOPT(self.maze, self.player.location, self.cluster[b_k][1], self.TIME_ALLOWED * 20/100)
+                    to = TwoOPT(self.maze, self.cluster[b_k][1] + [self.player.location], self.TIME_ALLOWED * 20/100)
                     to.process()
 
                     d_t, p_t = to.getResult(self.player.location)
-                    #print("## Test " + repr(k) + ", distance : " + repr(d_t))
 
                     if d_t < d:
                         d, p = d_t, p_t
@@ -124,19 +126,26 @@ class Engine:
                 print("# Path of " + repr(d) + " found in " + repr(k) + " tests and " + repr(time.clock() - init) + " seconds")
 
                 # Set path
-                self.player.path = self.maze.convertMetaPathToRealPaths(p)
+                self.player.setPath(self.maze.convertMetaPathToRealPaths(p))
 
-        # Return path
-        print("# Turn executed in " + repr(time.clock() - t) + " seconds")
+        print(self.player.path)
 
-        if not self.player.path or len(self.player.path[0]) <= 1:
-            raise Exception("LE PATH EST VIDE !")
+        if (not self.player.path) or len(self.player.path[0]) <= 1:
+            raise Exception("LE PATH EST VIDE ! " + repr(self.player.path) + " | Cheeses ("+ repr(len(self.CURRENT_CHEESES_LOCATION)) + ") " + repr(self.CURRENT_CHEESES_LOCATION))
 
         current_node, next_node = self.player.path[0][0], self.player.path[0][1]
         print("# Next node : " + repr(next_node))
         self.player.path[0] = self.player.path[0][1::]
 
-        return self.maze.getMove(current_node, next_node)
+        # Return path
+        print("# Turn executed in " + repr(time.clock() - t) + " seconds")
+
+        try:
+            return self.maze.getMove(current_node, next_node)
+        except TypeError:
+            print("Path : " + repr(self.player.path))
+            print("Cheeses : " + repr(self.CURRENT_CHEESES_LOCATION))
+            raise Exception("Exception")
 
     def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed, PREPROCESSING = False):
         # If it's the first update (we are in the preprocessing)
@@ -148,7 +157,7 @@ class Engine:
 
             # Create Metagraph
             self.maze.createMetaGraph(piecesOfCheese)
-            print("# Metagraph generated in " + repr(time.clock() - b_t))
+            print("## Metagraph generated in " + repr(time.clock() - b_t))
 
             # Get the total number of cheeses
             self.TOTAL_CHEESES = len(piecesOfCheese)
@@ -160,7 +169,7 @@ class Engine:
 
             result = alg.process((timeAllowed - (time.clock() - b_t)) * (95/100))
 
-            print("# Clusters : " + repr(alg.k) + " clusters have been generated")
+            print("## Clusters : " + repr(alg.k) + " clusters have been generated")
 
             # Checks clusters
             tot_cheeses = 0
@@ -175,7 +184,7 @@ class Engine:
 
             # TODO : vérifié le nombre total de fromage, ajouté un cluster spécial pur les fromages non référencés
 
-            print("# Preprocessing executed in " + repr(time.clock() - b_t) + " seconds")
+            print("# Pre-execution executed in " + repr(time.clock() - b_t) + " seconds")
 
         b_t = time.clock()
 
@@ -184,6 +193,7 @@ class Engine:
             if cheese not in piecesOfCheese:
                 for k in range(len(self.cluster)):
                     if cheese in self.cluster[k][1]:
+
                         self.cluster[k][1].remove(cheese)
 
                     # If the cluster is empty, We delete it

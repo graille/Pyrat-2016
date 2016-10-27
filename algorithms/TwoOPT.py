@@ -6,37 +6,27 @@ import time
 
 
 class TwoOPT:
-    def __init__(self, maze, origin = None, goals = None, allowedTime = 2):
+    def __init__(self, maze, goals = None, allowedTime = 2):
         self.maze = maze
-        self.origin = origin if origin else ()
-        self.goals = goals if goals else ()
+        self.setGoals(goals) if goals else ()
 
-        self.NB_OF_NODES = len(goals) + 1 if goals else 0
         self.path = []
 
         self.allowedTime = allowedTime
 
-    def setOrigin(self, origin):
-        self.origin = origin
-
     def setGoals(self, goals):
         self.goals = goals.copy()
-        self.NB_OF_NODES = len(goals) + 1
+        self.NB_OF_NODES = len(self.goals)
 
     def setAllowedTime(self, time):
         self.allowedTime = time
 
     def calculateFirstPath(self):
         """
-        Create a naive path
+        Create a random path
         """
         rd.shuffle(self.goals)
-        self.path = [self.origin] + self.goals
-
-        # We start with a random
-        #for n in self.goals:
-        #    if n not in self.path:
-        #        self.path.append(n)
+        self.path = self.goals
 
     def process(self):
         self.algorithm()

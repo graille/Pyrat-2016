@@ -12,23 +12,33 @@ class Rat:
 
         # Paths managers
         self.path = []
-        self.precedentNodes = []
         self.destination = None
-
-    def addCheese(self):
-        self.score += 1
+        self.previousNodes = []
 
     def setLocation(self, new_location):
         if new_location != self.location:
-            self.precedentNodes.append(self.location)
+            # We keep the 40 lastest nodes
+            self.previousNodes.append(self.location)
+            self.previousNodes = self.previousNodes[:40]
+
+            # Update location
             self.location = new_location
 
-            # Update path
-            if (new_location == self.destination) and self.path:
-                self.path = self.path[1::]
-                if self.path and self.path[0][-1]:
-                    self.destination = self.path[0][-1]
-                    print("## Switch to destination " + repr(self.destination))
+        # Update path
+        if self.location == self.destination and len(self.path) > 1:
+            self.path = self.path[1::]
+            if self.path and self.path[0]:
+                self.destination = self.path[0][-1]
+                print("### Path updated : switch to destination " + repr(self.destination))
+
+    def setPath(self, path):
+        if path:
+            if path[0]:
+                self.path = path
+                self.destination = path[0][-1]
+        elif path == None:
+            self.path = []
+            self.destination = None
 
 class Player(Rat):
     pass

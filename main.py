@@ -27,21 +27,32 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     global engine
 
     t = time.clock()
+    print("Start preprocessing")
+
     # Initialize the game
     engine = Engine(mazeMap, mazeWidth, mazeHeight)
 
     # Update with preprocessing argument
-    engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed, True)
+    engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100, True)
+
+    #mg = MazeViewer(mazeMap, mazeWidth, mazeHeight)
+    #for n in engine.cluster:
+    #    mg.showNodes(n[1], color=mg.PATH_COLOR[mg.CURRENT_PATH_COLOR])
+    #    mg.CURRENT_PATH_COLOR = (mg.CURRENT_PATH_COLOR + 1) % len(mg.PATH_COLOR)
+    #mg.show()
+
     print("Total preprocessing executed in " + repr(time.clock() - t))
     print()
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
     global engine
     t = time.clock()
+    print("Begin turn")
+
     # Update
-    engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
+    engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
     action = engine.turn()
-    
+
     print('[' + repr(action) + '] in ' + repr(time.clock() - t))
     print()
     return action
@@ -355,4 +366,29 @@ if __name__ == "__main__":
     opponent_origin = (0, 24)
 
     preprocessing(mazeMap, w, h, player_origin, opponent_origin, cheeses, 3)
-    turn(mazeMap, w, h, player_origin, opponent_origin, 0, 0, cheeses, 0.1)
+
+    mg = MazeViewer(mazeMap, w, h)
+
+    for n in engine.cluster:
+        mg.showNodes(n[1], color=mg.PATH_COLOR[mg.CURRENT_PATH_COLOR])
+        mg.CURRENT_PATH_COLOR = (mg.CURRENT_PATH_COLOR + 1) % len(mg.PATH_COLOR)
+
+
+
+    current = player_origin
+    path = []
+
+    while cheeses:
+        way = turn(mazeMap, w, h, current, opponent_origin, 0, 0, cheeses.copy(), 0.1)
+        current = engine.player.path[0][0]
+        path.append(way)
+
+        if current in cheeses:
+            cheeses.remove(current)
+
+    print(path)
+
+
+
+    mg.showPath(player_origin, path)
+    mg.show()

@@ -85,8 +85,8 @@ class Maze:
         :return: bool
         """
         if origin != goal:
-            i1,j1 = origin
-            i2,j2 = goal
+            i1, j1 = origin
+            i2, j2 = goal
 
             if i1 - i2 == -1:
                 return 'D'
