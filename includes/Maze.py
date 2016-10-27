@@ -143,18 +143,14 @@ class Maze:
         """
         dij = Dijkstra(self)
         for n1 in cheeses_list:
-            self.distanceMetagraph[n1] = {}
-            self.pathMetagraph[n1] = {}
-
             # Calculate path and distance with Dijkstra
             dij.setOrigin(n1)
             dij.setGoal(None)
             dij.process()
 
             for n2 in cheeses_list:
-                result = dij.getResult(n2)
-                self.distanceMetagraph[n1][n2] = result[0]
-                self.pathMetagraph[n1][n2] = result[1]
+                d, p = dij.getResult(n2)
+                self.coupleNodesInMetagraph(n1, n2, d, p)
 
     def addNodeToMetagraph(self, node, nodes_list):
         """
@@ -185,6 +181,11 @@ class Maze:
         #    print("Pas besoin a partir de " + repr(node) + " to " + repr(nodes_list))
 
     def coupleNodesInMetagraph(self, n1, n2, d, p):
+        """
+        :param d: distance from n1 to n2
+        :param p: path from n1 to n2
+        """
+
         if n1 not in self.distanceMetagraph:
             self.distanceMetagraph[n1] = {}
             self.pathMetagraph[n1] = {}
@@ -197,10 +198,10 @@ class Maze:
             self.pathMetagraph[n2] = {}
 
         self.distanceMetagraph[n2][n1] = d
-        self.pathMetagraph[n2][n1] = p
+        self.pathMetagraph[n2][n1] = p[::-1]  # Path from n2 to n1 is the opposite of the path from n1 to n2
 
     # Algoritms application
-    def getFatestPath(self, origin, goal):
+    def getFastestPath(self, origin, goal):
         try:
             return (self.distanceMetagraph[origin][goal], self.pathMetagraph[origin][goal])
         except KeyError:

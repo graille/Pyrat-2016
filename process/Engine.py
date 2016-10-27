@@ -64,7 +64,7 @@ class Engine:
 
             # If there is only one cheese
             if self.CURRENT_CHEESES_NB == 1:
-                self.player.setPath([self.maze.getFatestPath(self.player.location, self.CURRENT_CHEESES_LOCATION[0])[1]])
+                self.player.setPath([self.maze.getFastestPath(self.player.location, self.CURRENT_CHEESES_LOCATION[0])[1]])
 
             # If there are 2 cheeses
             elif self.CURRENT_CHEESES_NB == 2:
@@ -86,7 +86,7 @@ class Engine:
                     else:
                         goal = n1
 
-                self.player.setPath([self.maze.getFatestPath(self.player.location, goal)[1]])
+                self.player.setPath([self.maze.getFastestPath(self.player.location, goal)[1]])
 
             # In other cases
             else:
@@ -128,6 +128,21 @@ class Engine:
                 # Set path
                 self.player.setPath(self.maze.convertMetaPathToRealPaths(p))
 
+        # Radar
+        for n in self.CURRENT_CHEESES_LOCATION:
+            # Check if we can have it
+            if self.maze.distanceMetagraph[self.player.location][n] <= 2:
+
+                # Check if the node is not in the path
+                for li in self.player.path:
+                    if n not in li:
+
+                        # Check if the node is not for the opponent
+                        if self.maze.distanceMetagraph[self.player.location][n] <= self.maze.distanceMetagraph[self.opponent.location][n]:
+
+                            # Add n to path
+                            self.player.setPath([self.maze.pathMetagraph[self.player.location][n]] + [self.maze.pathMetagraph[n][self.player.destination]] + self.player.path[1::])
+
         print(self.player.path)
 
         if (not self.player.path) or len(self.player.path[0]) <= 1:
@@ -143,9 +158,10 @@ class Engine:
         try:
             return self.maze.getMove(current_node, next_node)
         except TypeError:
+            print("ERROR")
             print("Path : " + repr(self.player.path))
             print("Cheeses : " + repr(self.CURRENT_CHEESES_LOCATION))
-            raise Exception("Exception")
+            exit()
 
     def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed, PREPROCESSING = False):
         # If it's the first update (we are in the preprocessing)
