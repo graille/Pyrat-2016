@@ -92,20 +92,24 @@ class Engine:
             else:
                 # Update clusters rentability
                 self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
-                print("Current cheeses (" + repr(self.CURRENT_CHEESES_NB) + ") : " + repr(self.CURRENT_CHEESES_LOCATION))
-                print("Clusters : " + repr(self.cluster))
-                b_r, b_k = -1, -1
+
+                self.clusterRentability = []
 
                 for k in range(len(self.cluster)):
                     r, nb = 0, 0
                     if self.cluster[k][1]: # If the cluster is not empty
+                        # TODO : Verifier que l'adversaire n'est pas dans ce cluster actuelement
+
                         for n in self.cluster[k][1]:
                             r += 1
                             nb += self.factors[n]
 
-                        self.clusterRentability.append(len(self.cluster[k]) / (float(nb / r)))
-                        if self.clusterRentability[-1] > b_r:
-                            b_r, b_k = self.clusterRentability[-1], k
+                        r = (len(self.cluster[k]) / (float(nb / r)), k)
+
+                        self.clusterRentability.append(r)
+
+                self.clusterRentability.sort()
+                b_r, b_k = self.clusterRentability[-1]
 
                 # Calculate Path
                 d, p = np.inf, [] # A remplacer par un glouton plus tard
@@ -129,6 +133,7 @@ class Engine:
                 self.player.setPath(self.maze.convertMetaPathToRealPaths(p))
 
         # Radar
+        r_d, r_n = np.inf, None
         for n in self.CURRENT_CHEESES_LOCATION:
             # Check if we can have it
             if self.maze.distanceMetagraph[self.player.location][n] <= 2:
@@ -141,7 +146,12 @@ class Engine:
                         if self.maze.distanceMetagraph[self.player.location][n] <= self.maze.distanceMetagraph[self.opponent.location][n]:
 
                             # Add n to path
-                            self.player.setPath([self.maze.pathMetagraph[self.player.location][n]] + [self.maze.pathMetagraph[n][self.player.destination]] + self.player.path[1::])
+                            if self.maze.distanceMetagraph[self.player.location][n] < r_d:
+                                r_d = self.maze.distanceMetagraph[self.player.location][n]
+                                r_n = n
+
+        if r_n:
+            self.player.setPath([self.maze.pathMetagraph[self.player.location][r_n]] + [self.maze.pathMetagraph[r_n][self.player.destination]] + self.player.path[1::])
 
         print(self.player.path)
 
@@ -155,6 +165,8 @@ class Engine:
         # Return path
         print("# Turn executed in " + repr(time.clock() - t) + " seconds")
 
+        if time.clock() - t > 0.1:
+            raise Exception("Temps dépasser")
         try:
             return self.maze.getMove(current_node, next_node)
         except TypeError:
