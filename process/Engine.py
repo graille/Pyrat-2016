@@ -42,128 +42,127 @@ class Engine:
 
     def turn(self):
         t = time.clock()
-        if self.CURRENT_CHEESES_NB == 1:
-            alg = Astar(self.maze)
-            alg.setOrigin(self.player.location)
-            alg.setGoal(self.CURRENT_CHEESES_LOCATION[0])
-            alg.process()
 
-            self.player.path = alg.getResult()[1]
-        elif self.CURRENT_CHEESES_NB == 2:
-            factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
-            n1, n2 = self.CURRENT_CHEESES_LOCATION[0], self.CURRENT_CHEESES_LOCATION[1]
+        # Add player and opponent to metaGraph
+        self.maze.addNodeToMetagraph(self.player.location, self.CURRENT_CHEESES_LOCATION)
+        self.maze.addNodeToMetagraph(self.opponent.location, self.CURRENT_CHEESES_LOCATION + [self.player.location])
 
-            alg = Astar(self.maze)
-            alg.setOrigin(self.player.location)
+        print("## Metagraph addition of executed in " + str(time.clock() - t))
 
-            if factors[n1] <= 1 and factors[n2] <= 1:
-                if factors[n1] > factors[n2]:
+        # If we need to create a path
+        if self.player.destination not in self.CURRENT_CHEESES_LOCATION:  # Si l'adversaire a déja manger notre fromage ou qu'il se trouve juste devant nous (une avance par rapport a nous)
+            # On recalcul tout
+            # TODO : si on est juste derriere l'adversaire
+            self.player.path = []
+
+        if not path:
+            if self.CURRENT_CHEESES_NB == 1:
+                self.player.path = self.maze.getFatestPath(self.player.location, self.CURRENT_CHEESES_LOCATION[0])[1]
+            elif self.CURRENT_CHEESES_NB == 2:
+                factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
+                n1, n2 = self.CURRENT_CHEESES_LOCATION[0], self.CURRENT_CHEESES_LOCATION[1]
+
+                alg = Astar(self.maze)
+                alg.setOrigin(self.player.location)
+
+                if factors[n1] <= 1 and factors[n2] <= 1:
+                    if factors[n1] > factors[n2]:
+                        alg.setGoal(n1)
+                        alg.process()
+                    else:
+                        alg.setGoal(n2)
+                        alg.process()
+
+                    self.player.path = alg.getResult()[1]
+                elif factors[n1] < 1 and factors[n2] > 1:
                     alg.setGoal(n1)
                     alg.process()
-                else:
+
+                    self.player.path = alg.getResult()[1]
+                elif factors[n1] > 1 and factors[n2] < 1:
                     alg.setGoal(n2)
                     alg.process()
 
-                self.player.path = alg.getResult()[1]
-            elif factors[n1] < 1 and factors[n2] > 1:
-                alg.setGoal(n1)
-                alg.process()
+                    self.player.path = alg.getResult()[1]
+                else:
+                    if factors[n1] > factors[n2]:
+                        alg.setGoal(n2)
+                        alg.process()
+                    else:
+                        alg.setGoal(n1)
+                        alg.process()
 
-                self.player.path = alg.getResult()[1]
-            elif factors[n1] > 1 and factors[n2] < 1:
-                alg.setGoal(n2)
-                alg.process()
-
-                self.player.path = alg.getResult()[1]
+                    self.player.path = alg.getResult()[1]
             else:
-                if factors[n1] > factors[n2]:
-                    alg.setGoal(n2)
-                    alg.process()
-                else:
-                    alg.setGoal(n1)
-                    alg.process()
 
-                self.player.path = alg.getResult()[1]
-        else:
-            # Add player and opponent to metaGraph
-            self.maze.addNodeToMetagraph(self.player.location, self.CURRENT_CHEESES_LOCATION)
-            self.maze.addNodeToMetagraph(self.opponent.location, self.CURRENT_CHEESES_LOCATION + [self.player.location])
+                if len(self.player.path) <= 1 or \
+                        (self.player.location != self.player.destination and self.player.destination not in self.CURRENT_CHEESES_LOCATION):
+                    # We activate the checker
+                    self.CHECKER = True
 
-            # If we need to create a path
-            if self.player.destination not in self.CURRENT_CHEESES_LOCATION:  # Si l'adversaire a déja manger notre fromage ou qu'il se trouve juste devant nous (une avance par rapport a nous)
-                # On recalcul tout
-                # TODO : si on est juste derriere l'adversaire
-                self.player.path = []
-                self.player.waitingPaths = []
-
-            if len(self.player.path) <= 1 or \
-                    (self.player.location != self.player.destination and self.player.destination not in self.CURRENT_CHEESES_LOCATION):
-                # We activate the checker
-                self.CHECKER = True
-
-                if self.player.waitingPaths:  # Si on a des chemins en attente
-                    self.player.path = self.player.waitingPaths[0]
-                    self.player.waitingPaths = self.player.waitingPaths[1::] if (len(self.player.waitingPaths) > 1) else []
-                    self.player.destination = self.player.path[-1]
-
-                    if self.player.destination not in self.CURRENT_CHEESES_LOCATION: # Si l'adversaire a manger notre prochain fromage
-                        self.turn() # On reboucle pour trouver une nouvelle stratégie
-                else:
-                    # Update clusters rentability
-                    self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
-                    b_r, b_k = -1, -1
-
-                    for k in range(len(self.cluster)):
-                        r, nb = 0, 0
-                        if self.cluster[k][1]: # If the cluster is not empty
-                            for n in self.cluster[k][1]:
-                                r += 1
-                                nb += self.factors[n]
-
-                            self.clusterRentability.append(len(self.cluster[k]) / (float(nb / r)))
-                            if self.clusterRentability[-1] > b_r:
-                                b_r, b_k = self.clusterRentability[-1], k
-
-                    # Calculate Path
-                    d, p = np.inf, [] # A remplacer par un glouton plus tard
-                    k, init = 0, time.clock()
-
-                    #while (time.clock() - t) < (self.TIME_ALLOWED * 70/100):
-                    while k < 3:
-                        to = TwoOPT(self.maze, self.player.location, self.cluster[b_k][1], self.TIME_ALLOWED * 20/100)
-                        to.process()
-                        d_t, p_t = to.getResult(self.player.location)
-                        print("## Test " + repr(k) + ", distance : " + repr(d_t))
-                        if d_t < d:
-                            d, p = d_t, p_t
-
-                        k += 1
-
-                    print("# Path of " + repr(d) + " finded in " + repr(time.clock() - init))
-
-                    # Set path
-                    self.player.waitingPaths = self.maze.convertMetaPathToRealPaths(p)
-
-                    if len(self.player.waitingPaths) > 0 and len(self.player.path) <= 1:
+                    if self.player.waitingPaths:  # Si on a des chemins en attente
                         self.player.path = self.player.waitingPaths[0]
                         self.player.waitingPaths = self.player.waitingPaths[1::] if (len(self.player.waitingPaths) > 1) else []
                         self.player.destination = self.player.path[-1]
 
-            # Check around player
-            if self.CHECKER:
-                for n in self.CURRENT_CHEESES_LOCATION:
-                    dist_to_n, path_to_n = self.maze.getFatestPath(self.player.location, n)
-                    dist_to_dest, path_to_dest = self.maze.getFatestPath(self.player.location, self.player.destination)
+                        if self.player.destination not in self.CURRENT_CHEESES_LOCATION: # Si l'adversaire a manger notre prochain fromage
+                            self.turn() # On reboucle pour trouver une nouvelle stratégie
+                    else:
+                        # Update clusters rentability
+                        self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
+                        b_r, b_k = -1, -1
 
-                    if dist_to_n <= self.CHECKER_RADIUS \
-                            and n != self.player.destination \
-                            and (not self.inPath(self.player, n)) \
-                            and self.factors[n] < self.DF_MAX \
-                            and dist_to_dest > self.CHECKER_RADIUS \
-                            and path_to_n:
-                        self.addToPath(self.player, path_to_n, n)
-                        self.CHECKER = False
-                        break
+                        for k in range(len(self.cluster)):
+                            r, nb = 0, 0
+                            if self.cluster[k][1]: # If the cluster is not empty
+                                for n in self.cluster[k][1]:
+                                    r += 1
+                                    nb += self.factors[n]
+
+                                self.clusterRentability.append(len(self.cluster[k]) / (float(nb / r)))
+                                if self.clusterRentability[-1] > b_r:
+                                    b_r, b_k = self.clusterRentability[-1], k
+
+                        # Calculate Path
+                        d, p = np.inf, [] # A remplacer par un glouton plus tard
+                        k, init = 0, time.clock()
+
+                        #while (time.clock() - t) < (self.TIME_ALLOWED * 70/100):
+                        while k < 3:
+                            to = TwoOPT(self.maze, self.player.location, self.cluster[b_k][1], self.TIME_ALLOWED * 20/100)
+                            to.process()
+                            d_t, p_t = to.getResult(self.player.location)
+                            print("## Test " + repr(k) + ", distance : " + repr(d_t))
+                            if d_t < d:
+                                d, p = d_t, p_t
+
+                            k += 1
+
+                        print("# Path of " + repr(d) + " finded in " + repr(time.clock() - init))
+
+                        # Set path
+                        self.player.waitingPaths = self.maze.convertMetaPathToRealPaths(p)
+
+                        if len(self.player.waitingPaths) > 0 and len(self.player.path) <= 1:
+                            self.player.path = self.player.waitingPaths[0]
+                            self.player.waitingPaths = self.player.waitingPaths[1::] if (len(self.player.waitingPaths) > 1) else []
+                            self.player.destination = self.player.path[-1]
+
+                # Check around player
+                if self.CHECKER:
+                    for n in self.CURRENT_CHEESES_LOCATION:
+                        dist_to_n, path_to_n = self.maze.getFatestPath(self.player.location, n)
+                        dist_to_dest, path_to_dest = self.maze.getFatestPath(self.player.location, self.player.destination)
+
+                        if dist_to_n <= self.CHECKER_RADIUS \
+                                and n != self.player.destination \
+                                and (not self.inPath(self.player, n)) \
+                                and self.factors[n] < self.DF_MAX \
+                                and dist_to_dest > self.CHECKER_RADIUS \
+                                and path_to_n:
+                            self.addToPath(self.player, path_to_n, n)
+                            self.CHECKER = False
+                            break
 
         # Return path
         print("# Turn executed in " + repr(time.clock() - t) + " seconds")
