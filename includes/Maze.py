@@ -17,7 +17,7 @@ class Maze:
         self.mazeWidth = mazeWidth
         self.mazeHeight = mazeHeight
 
-        self.NB_CASES = self.mazeWidth * self.mazeHeight
+        self.NB_NODES = self.mazeWidth * self.mazeHeight
         self.nodes = list(self.mazeMap.keys())
 
         # Init matrixMap
@@ -156,6 +156,7 @@ class Maze:
                 self.coupleNodesInMetagraph(n1, n2, d, p)
 
             cheeses_list.remove(n1) # On supprime le node en cours, pour accelerer le programme
+            cheeses_list.remove(self.getOpposite(n1)) if self.getOpposite(n1) != n1 else () # Par symetrie, on supprime l'opposé
 
         #print(repr(len(self.distanceMetagraph[(12, 13)]))+ repr(self.distanceMetagraph[(12, 13)]))
 
@@ -167,6 +168,7 @@ class Maze:
         :return:
         """
 
+        # Create the list of unChecked nodes
         checked_list = []
 
         t = time.clock()
@@ -187,7 +189,7 @@ class Maze:
                 d, p = dij.getResult(n)
                 self.coupleNodesInMetagraph(node, n, d, p)
 
-    def coupleNodesInMetagraph(self, n1, n2, d, p):
+    def coupleNodesInMetagraph(self, n1, n2, d, p, recurse = True):
         """
         :param d: distance from n1 to n2
         :param p: path from n1 to n2
@@ -206,6 +208,14 @@ class Maze:
 
         self.distanceMetagraph[n2][n1] = d
         self.pathMetagraph[n2][n1] = p[::-1]  # Path from n2 to n1 is the opposite of the path from n1 to n2
+
+        # Add opposite
+        if recurse:
+            self.coupleNodesInMetagraph(self.getOpposite(n1), self.getOpposite(n2), d, list(map(self.getOpposite, p)), False)
+
+    def getOpposite(self, n):
+        x, y = n
+        return (self.mazeHeight - x - 1, self.mazeWidth - y - 1)
 
     # Algoritms application
     def getFastestPath(self, origin, goal):

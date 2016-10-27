@@ -147,17 +147,16 @@ class Engine:
 
                             # Add n to path
                             if self.maze.distanceMetagraph[self.player.location][n] < r_d:
-                                r_d = self.maze.distanceMetagraph[self.player.location][n]
-                                r_n = n
+                                r_d, r_n = self.maze.distanceMetagraph[self.player.location][n], n
 
         if r_n:
             self.player.setPath([self.maze.pathMetagraph[self.player.location][r_n]] + [self.maze.pathMetagraph[r_n][self.player.destination]] + self.player.path[1::])
 
-        print(self.player.path)
-
+        # Check
         if (not self.player.path) or len(self.player.path[0]) <= 1:
             raise Exception("LE PATH EST VIDE ! " + repr(self.player.path) + " | Cheeses ("+ repr(len(self.CURRENT_CHEESES_LOCATION)) + ") " + repr(self.CURRENT_CHEESES_LOCATION))
 
+        # Select next node
         current_node, next_node = self.player.path[0][0], self.player.path[0][1]
         print("# Next node : " + repr(next_node))
         self.player.path[0] = self.player.path[0][1::]
@@ -190,6 +189,8 @@ class Engine:
             # Get the total number of cheeses
             self.TOTAL_CHEESES = len(piecesOfCheese)
             self.INITIAL_CHEESES = piecesOfCheese
+
+            # Add player and opponent to metaGraph
 
             # Create clusters
             nb_cluster = round(self.TOTAL_CHEESES / 6)

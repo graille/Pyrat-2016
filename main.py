@@ -380,6 +380,7 @@ if __name__ == "__main__":
     path = []
 
     while cheeses:
+    #for k in range(5):
         way = turn(mazeMap, w, h, current, opponent_origin, 0, 0, cheeses.copy(), 0.1)
         current = engine.player.path[0][0]
         path.append(way)
