@@ -141,16 +141,23 @@ class Maze:
         :param nodes_list: List of currents cheeses
         :return:
         """
+        cheeses_list = cheeses_list.copy()
         dij = Dijkstra(self)
-        for n1 in cheeses_list:
+
+        while cheeses_list:
+            n1 = cheeses_list[0]
             # Calculate path and distance with Dijkstra
             dij.setOrigin(n1)
-            dij.setGoal(None)
+            dij.setGoal(cheeses_list)
             dij.process()
 
             for n2 in cheeses_list:
                 d, p = dij.getResult(n2)
                 self.coupleNodesInMetagraph(n1, n2, d, p)
+
+            cheeses_list.remove(n1) # On supprime le node en cours, pour accelerer le programme
+
+        #print(repr(len(self.distanceMetagraph[(12, 13)]))+ repr(self.distanceMetagraph[(12, 13)]))
 
     def addNodeToMetagraph(self, node, nodes_list):
         """
@@ -160,25 +167,25 @@ class Maze:
         :return:
         """
 
-        process = False
+        checked_list = []
 
+        t = time.clock()
         if node in self.distanceMetagraph:
             for n in nodes_list:
                 if n not in self.distanceMetagraph[node]:
-                    process = True
+                    checked_list.append(n)
         else:
-            process = True
+            checked_list = nodes_list
 
-        if process:
-            #print("### Add " + repr(node) + " with " + repr(nodes_list))
-            dij = Dijkstra(self, node, None)
+        # Environ 10^-6 sec pour arriver là
+        if checked_list:
+            dij = Dijkstra(self, node, checked_list)
             dij.process()
+            # Environ 0.02 sec pour un 25x25
 
-            for n in nodes_list:
+            for n in checked_list:
                 d, p = dij.getResult(n)
                 self.coupleNodesInMetagraph(node, n, d, p)
-        #else:
-        #    print("Pas besoin a partir de " + repr(node) + " to " + repr(nodes_list))
 
     def coupleNodesInMetagraph(self, n1, n2, d, p):
         """

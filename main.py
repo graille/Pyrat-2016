@@ -365,6 +365,7 @@ if __name__ == "__main__":
     player_origin = (24, 0)
     opponent_origin = (0, 24)
 
+    print("Cheeses : " + repr(cheeses))
     preprocessing(mazeMap, w, h, player_origin, opponent_origin, cheeses, 3)
 
     mg = MazeViewer(mazeMap, w, h)

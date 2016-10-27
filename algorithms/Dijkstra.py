@@ -7,19 +7,23 @@ Created on Fri Sep 16 18:07:45 2016
 
 import copy as cp
 import numpy as np
-
+import time
 
 class Dijkstra:
     def __init__(self, maze, origin = None, goal = None):
         self.graph = maze
-        self.setOrigin(origin) if origin else ()
+        self.setOrigin(origin)
         self.setGoal(goal)
 
     def setOrigin(self, n):
-        self.origin = n
+        if n:
+            self.origin = n
 
     def setGoal(self, n):
-        self.goal = n
+        if isinstance(n, list):
+            self.goal = n.copy()
+        else:
+            self.goal = n
 
     def clear(self):
         self.pathArray = {}
@@ -45,8 +49,16 @@ class Dijkstra:
                 n1 = self.findMin(Q)
                 Q.remove(n1)
 
-                if self.goal and n1 == self.goal:
-                    break
+                # Check the goal
+                if self.goal:
+                    if isinstance(self.goal, list):
+                        if n1 in self.goal:
+                            self.goal.remove(n1)
+                        if not self.goal or self.goal == [self.origin]:
+                            break
+                    else:
+                        if n1 == self.goal:
+                            break
 
                 for n2 in self.graph.getNeighbors(n1):
                     self.majDistance(n1, n2)
@@ -70,14 +82,14 @@ class Dijkstra:
             self.pathArray[n2] = n1
 
     def reconstructPath(self, node):
-        litteral_path = ""
+        #litteral_path = ""
         total_distance = 0
         current = node
         real_path = []
         while current != self.origin:
             new = self.pathArray[current]
 
-            litteral_path += self.graph.getMove(new, current)
+            #litteral_path += self.graph.getMove(new, current)
             total_distance += self.graph.getDistance(current, new)
             real_path.append(current)
 

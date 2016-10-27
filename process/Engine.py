@@ -46,7 +46,7 @@ class Engine:
         self.maze.addNodeToMetagraph(self.player.location, self.CURRENT_CHEESES_LOCATION)
         self.maze.addNodeToMetagraph(self.opponent.location, self.CURRENT_CHEESES_LOCATION + [self.player.location])
 
-        #print("## Metagraph addition executed in " + str(time.clock() - t))
+        print("## Metagraph addition executed in " + str(time.clock() - t))
 
         # In case of particular reaction
         if self.player.destination and \
@@ -60,7 +60,7 @@ class Engine:
                 (len(self.player.path) == 1 and len(self.player.path[0]) <= 1) or \
                 (not self.player.destination):
 
-            #print("### No destination detected : " + repr(self.player.destination)) if not self.player.destination else ()
+            print("### No destination detected : " + repr(self.player.destination)) if not self.player.destination else ()
 
             # If there is only one cheese
             if self.CURRENT_CHEESES_NB == 1:
@@ -127,7 +127,7 @@ class Engine:
 
                     k += 1
 
-                #print("# Path of " + repr(d) + " found in " + repr(k) + " tests and " + repr(time.clock() - init) + " seconds")
+                print("# Path of " + repr(d) + " found in " + repr(k) + " tests and " + repr(time.clock() - init) + " seconds")
 
                 # Set path
                 self.player.setPath(self.maze.convertMetaPathToRealPaths(p))
@@ -153,17 +153,17 @@ class Engine:
         if r_n:
             self.player.setPath([self.maze.pathMetagraph[self.player.location][r_n]] + [self.maze.pathMetagraph[r_n][self.player.destination]] + self.player.path[1::])
 
-        #print(self.player.path)
+        print(self.player.path)
 
         if (not self.player.path) or len(self.player.path[0]) <= 1:
             raise Exception("LE PATH EST VIDE ! " + repr(self.player.path) + " | Cheeses ("+ repr(len(self.CURRENT_CHEESES_LOCATION)) + ") " + repr(self.CURRENT_CHEESES_LOCATION))
 
         current_node, next_node = self.player.path[0][0], self.player.path[0][1]
-        #print("# Next node : " + repr(next_node))
+        print("# Next node : " + repr(next_node))
         self.player.path[0] = self.player.path[0][1::]
 
         # Return path
-        #print("# Turn executed in " + repr(time.clock() - t) + " seconds")
+        print("# Turn executed in " + repr(time.clock() - t) + " seconds")
 
         if time.clock() - t > 0.1:
             raise Exception("Temps dépasser")
@@ -185,7 +185,7 @@ class Engine:
 
             # Create Metagraph
             self.maze.createMetaGraph(piecesOfCheese)
-            #print("## Metagraph generated in " + repr(time.clock() - b_t))
+            print("## Metagraph generated in " + repr(time.clock() - b_t))
 
             # Get the total number of cheeses
             self.TOTAL_CHEESES = len(piecesOfCheese)
@@ -197,7 +197,7 @@ class Engine:
 
             result = alg.process((timeAllowed - (time.clock() - b_t)) * (95/100))
 
-            #print("## Clusters : " + repr(alg.k) + " clusters have been generated")
+            print("## Clusters : " + repr(alg.k) + " clusters have been generated")
 
             # Checks clusters
             tot_cheeses = 0
@@ -208,11 +208,12 @@ class Engine:
 
             # Check the total number of cheeses
             if not tot_cheeses == len(piecesOfCheese):
-                #print("# All cheeses has not been put in a cluster !!")
+                print("# All cheeses has not been put in a cluster !!")
+                pass
 
             # TODO : vérifié le nombre total de fromage, ajouté un cluster spécial pur les fromages non référencés
 
-            #print("# Pre-execution executed in " + repr(time.clock() - b_t) + " seconds")
+            print("# Pre-execution executed in " + repr(time.clock() - b_t) + " seconds")
 
         b_t = time.clock()
 
@@ -244,7 +245,7 @@ class Engine:
         self.CHECKER_RADIUS = 2
         self.TIME_ALLOWED = timeAllowed
 
-        #print("# Update executed in " + repr(time.clock() - b_t) + " seconds")
+        print("# Update executed in " + repr(time.clock() - b_t) + " seconds")
 
     # Factors management
     def calculateFactors(self, nodes):
@@ -257,7 +258,7 @@ class Engine:
 
             return factors
         except KeyError:
-            #print("# Factors calculated without metaGraph")
+            print("# Factors calculated without metaGraph")
             alg = Dijkstra(self.maze)
 
             # Calculate for player

@@ -24,13 +24,17 @@ class K_Means:
         self.NB_NODES = len(nodes)
 
     def getDistance(self, moy, n):
+        t = time.clock()
         x1, y1 = round(moy[0]), round(moy[1])
 
         dx1, dy1 = x1 - moy[0], y1 - moy[1]
 
         # Add moy to metagraph
         self.maze.addNodeToMetagraph((x1, y1), self.nodes)
+        #print("Distance finded in " + repr(time.clock() - t))
         d = self.maze.distanceMetagraph[(x1, y1)][n]
+
+
 
         return d + np.sqrt(dx1**2 + dy1**2)
 
@@ -56,6 +60,7 @@ class K_Means:
                 self.m[nb][i] = self.nodes[i]
 
             while allowed_time > (time.clock() - t):
+
                 self.S[nb] = {}
                 self.m[nb + 1] = {}
                 for i in range(self.k):
