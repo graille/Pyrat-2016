@@ -13,6 +13,7 @@ class Rat:
         # Paths managers
         self.path = []
         self.destination = None
+
         self.previousNodes = []
 
     def setLocation(self, new_location):
@@ -26,17 +27,17 @@ class Rat:
 
         # Update path
         if self.location == self.destination and len(self.path) > 1:
-            self.path = self.path[1::]
-            if self.path and self.path[0]:
-                self.destination = self.path[0][-1]
-                print("### Path updated : switch to destination " + repr(self.destination))
+            self.setPath(self.path[1::])
 
-    def setPath(self, path):
+    def setPath(self, path, verbose = False):
         if path:
             if path[0]:
                 self.path = path
                 self.destination = path[0][-1]
-        elif path == None:
+
+                if verbose:
+                    print("### Path updated : switch to destination " + repr(self.destination))
+        else:
             self.path = []
             self.destination = None
 

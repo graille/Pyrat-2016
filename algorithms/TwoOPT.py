@@ -48,8 +48,6 @@ class TwoOPT:
 
                     if self.getDistance(i, i + 1) + self.getDistance(j, j + 1) > self.getDistance(i, j) + self.getDistance(i + 1, j + 1):
                         self.exchange(i, j)
-                        #print("Exchange " + str(i) + "|" + str(j) + ". Comparaison distance : (before) " + repr(self.getDistance(i, j) + self.getDistance(i + 1, j + 1)) + " | (after) " + repr(self.getDistance(i, i + 1) + self.getDistance(j, j + 1)))
-                        #print("Current path " + repr(self.getResult()))
                         improve = True
 
     def shiftArray(self, a):

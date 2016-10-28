@@ -57,7 +57,9 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
     return action
 
 if __name__ == "__main__":
-    mazeMap = {(7, 3): {(6, 3): 5, (8, 3): 1}, (6, 9): {(6, 8): 1, (7, 9): 1}, (17, 11): {(18, 11): 1, (17, 12): 1},
+
+    mazeMap = []
+    mazeMap += [{(7, 3): {(6, 3): 5, (8, 3): 1}, (6, 9): {(6, 8): 1, (7, 9): 1}, (17, 11): {(18, 11): 1, (17, 12): 1},
                (19, 19): {(19, 18): 1, (18, 19): 1}, (16, 6): {(17, 6): 1, (16, 7): 1},
                (7, 12): {(7, 11): 1, (7, 13): 1, (8, 12): 1}, (24, 5): {(23, 5): 4}, (20, 20): {(20, 19): 1},
                (19, 4): {(20, 4): 1, (19, 3): 1}, (18, 4): {(18, 5): 1, (18, 3): 2}, (17, 20): {(16, 20): 9},
@@ -354,7 +356,7 @@ if __name__ == "__main__":
                (2, 21): {(1, 21): 1, (2, 22): 1}, (0, 13): {(1, 13): 1}, (3, 8): {(3, 7): 1, (3, 9): 10, (4, 8): 1},
                (2, 0): {(3, 0): 1, (2, 1): 1}, (1, 8): {(0, 8): 1, (1, 9): 1},
                (4, 3): {(4, 2): 1, (3, 3): 1, (5, 3): 1}, (2, 15): {(3, 15): 1, (2, 14): 1, (1, 15): 1},
-               (16, 1): {(15, 1): 1}, (5, 2): {(4, 2): 1, (6, 2): 1, (5, 3): 1}}
+               (16, 1): {(15, 1): 1}, (5, 2): {(4, 2): 1, (6, 2): 1, (5, 3): 1}}]
     w, h = 25, 25
     cheeses = [(23, 24), (1, 0), (13, 8), (11, 16), (20, 20), (4, 4), (11, 2), (20, 12), (13, 22), (4, 12), (16, 20),
                (9, 0), (24, 16), (22, 3), (8, 24), (2, 21), (16, 0), (10, 2), (8, 5), (14, 22), (16, 19), (20, 0),
@@ -370,26 +372,37 @@ if __name__ == "__main__":
     mg = MazeViewer(mazeMap, w, h)
 
     for n in engine.cluster:
-        mg.showNodes(n[1], color=mg.PATH_COLOR[mg.CURRENT_PATH_COLOR])
+        mg.showNodes(engine.cluster[n], color=mg.PATH_COLOR[mg.CURRENT_PATH_COLOR])
         mg.CURRENT_PATH_COLOR = (mg.CURRENT_PATH_COLOR + 1) % len(mg.PATH_COLOR)
 
+    current_player = player_origin
+    current_opponent = opponent_origin
+    player_path = []
+    opponent_path = []
 
-
-    current = player_origin
-    path = []
+    player_score = 0
+    opponent_score = 0
 
     while cheeses:
-    #for k in range(5):
-        way = turn(mazeMap, w, h, current, opponent_origin, 0, 0, cheeses.copy(), 0.1)
-        current = engine.player.path[0][0]
-        path.append(way)
+        way = turn(mazeMap, w, h, current_player, current_opponent, 0, 0, cheeses.copy(), 0.1)
+        current_player = engine.player.path[0][0]
+        player_path.append(way)
 
-        if current in cheeses:
-            cheeses.remove(current)
+        # Move opponent
+        new_opponent = engine.maze.getNearestNode(current_opponent, cheeses)[1][1]
+        opponent_path.append([current_opponent, new_opponent])
+        current_opponent = new_opponent
 
-    print(path)
+        if current_player in cheeses:
+            cheeses.remove(current_player)
+            player_score += 1
+        if current_opponent in cheeses:
+            cheeses.remove(current_opponent)
+            opponent_score += 1
 
+    print("Algorithm score : " + str(player_score))
+    print("Opponent score : " + str(opponent_score))
 
-
-    mg.showPath(player_origin, path)
+    mg.showPath(player_origin, player_path)
+    mg.showPath(opponent_path, color='yellow')
     mg.show()

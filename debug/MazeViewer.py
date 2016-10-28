@@ -291,7 +291,20 @@ class MazeViewer:
             # On augmente la couche
             self.CURRENT_LAYER += 1
 
+    def upAll(self, *args):
+        for path_id in self.pathContainer:
+            self.showNextPath(path_id)
+
+    def downAll(self, *args):
+        for path_id in self.pathContainer:
+            self.showPreviousPath(path_id)
+
     def show(self):
+        # Bind
+        self.window.bind_all('<Left>', self.downAll)
+        self.window.bind_all('<Right>', self.upAll)
+
+        # Others
         rows = len(list(self.pathContainer.keys()))
         self.pathTracer.grid(column = 1, row=rows, columnspan=3)
         self.canvas.grid(row = 0, column = 0, rowspan=(rows+1))

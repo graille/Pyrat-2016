@@ -48,7 +48,7 @@ class K_Means:
         return (x, y)
 
     def process(self, allowed_time):
-        if self.NB_NODES > self.k:
+        if self.NB_NODES >= self.k:
             t, nb = time.clock(), 0
 
             # Initialise M

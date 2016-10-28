@@ -33,16 +33,18 @@ class Engine:
         self.opponent = None
 
         # Cache clusters
-        self.cluster = []
-        self.clusterMiddle = []
+        self.cluster = {}
+        self.clusterMiddle = {}
         self.clusterRentability = []
 
         self.factors = {}
 
         # Parameters
         self.RENTABILITY_METHOD = 1
-        self.NB_CLUSTER = 6
+        self.NB_CLUSTER = 6 # between 2 and 90% du nombre totalde fromage
+
         self.RADAR = True
+        self.RADAR_RADIUS = 2
 
     def turn(self):
         t = time.clock()
@@ -50,6 +52,10 @@ class Engine:
         # Add player and opponent to metaGraph
         self.maze.addNodeToMetagraph(self.player.location, self.CURRENT_CHEESES_LOCATION)
         self.maze.addNodeToMetagraph(self.opponent.location, self.CURRENT_CHEESES_LOCATION + [self.player.location])
+
+        # The opponent use a GLOUTON algorithm
+        o_d, o_p = self.maze.getNearestNode(self.opponent.location, self.CURRENT_CHEESES_LOCATION)
+        self.opponent.setPath([o_p])
 
         print("## Metagraph addition executed in " + str(time.clock() - t))
 
@@ -69,10 +75,13 @@ class Engine:
 
             # If there is only one cheese
             if self.CURRENT_CHEESES_NB == 1:
-                self.player.setPath([self.maze.getFastestPath(self.player.location, self.CURRENT_CHEESES_LOCATION[0])[1]])
+                print("## ONE node mode")
+                d, p = self.maze.getFastestPath(self.player.location, self.CURRENT_CHEESES_LOCATION[0])
+                self.player.setPath([p])
 
             # If there are 2 cheeses
             elif self.CURRENT_CHEESES_NB == 2:
+                print("## TWO node mode")
                 factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
                 n1, n2 = self.CURRENT_CHEESES_LOCATION[0], self.CURRENT_CHEESES_LOCATION[1]
 
@@ -91,7 +100,8 @@ class Engine:
                     else:
                         goal = n1
 
-                self.player.setPath([self.maze.getFastestPath(self.player.location, goal)[1]])
+                d, p = self.maze.getFastestPath(self.player.location, goal)
+                self.player.setPath([p])
 
             # In other cases
             else:
@@ -100,18 +110,17 @@ class Engine:
                     self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
                     self.clusterRentability = []
 
-                    for k in range(len(self.cluster)):
+                    for k in self.cluster:
                         r, nb = 0, 0
-                        if self.cluster[k][1]: # If the cluster is not empty
-                            # TODO : Verifier que l'adversaire n'est pas dans ce cluster actuelement
-
-                            for n in self.cluster[k][1]:
+                        if self.cluster[k]: # If the cluster is not empty
+                            for n in self.cluster[k]:
                                 r += 1
                                 nb += self.factors[n]
 
-                            r = (len(self.cluster[k]) / (float(nb / r)), k)
+                            rent = (len(self.cluster[k]) / (float(nb / r)), k)
 
-                            self.clusterRentability.append(r)
+                            self.clusterRentability.append(rent)
+
                 elif self.RENTABILITY_METHOD == 2:
                     self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
                     self.clusterRentability = []
@@ -129,7 +138,7 @@ class Engine:
                 time_limit = (self.TIME_ALLOWED * 80/100) if (time.clock() - t) < (self.TIME_ALLOWED * 90/100) else (time.clock() - t) + (50/100 * self.TIME_ALLOWED)
                 while (time.clock() - t) < time_limit:
                     # Execute twoOPT
-                    to = TwoOPT(self.maze, self.cluster[b_k][1] + [self.player.location], self.TIME_ALLOWED * 20/100)
+                    to = TwoOPT(self.maze, self.cluster[b_k] + [self.player.location], self.TIME_ALLOWED * 20/100)
                     to.process()
 
                     d_t, p_t = to.getResult(self.player.location)
@@ -140,6 +149,7 @@ class Engine:
                     k += 1
 
                 print("# Path of " + repr(d) + " found in " + repr(k) + " tests and " + repr(time.clock() - init) + " seconds")
+
                 # Set path
                 self.player.setPath(self.maze.convertMetaPathToRealPaths(p))
 
@@ -148,7 +158,7 @@ class Engine:
             r_d, r_n = np.inf, None
             for n in self.CURRENT_CHEESES_LOCATION:
                 # Check if we can have it
-                if self.maze.distanceMetagraph[self.player.location][n] <= 2:
+                if self.maze.distanceMetagraph[self.player.location][n] <= self.RADAR_RADIUS:
                     in_path = False
                     # Check if the node is not in the path
                     for li in self.player.path:
@@ -189,59 +199,73 @@ class Engine:
             print("Cheeses : " + repr(self.CURRENT_CHEESES_LOCATION))
             exit()
 
+    def getClusterCoordinate(self, i):
+        x1, y1 = self.clusterMiddle[i]
+        x1, y1 = round(x1), round(y1)
+
+        return (x1, y1)
+
+
+    def preprocessing(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
+        b_t = time.clock()
+        # Create players
+        self.player = Player(playerLocation)
+        self.opponent = Opponent(opponentLocation)
+
+        # Create Metagraph
+        self.maze.createMetaGraph(piecesOfCheese)
+        print("## Metagraph generated in " + repr(time.clock() - b_t))
+
+        # Get the total number of cheeses
+        self.TOTAL_CHEESES = len(piecesOfCheese)
+        self.INITIAL_CHEESES = piecesOfCheese
+
+        # Create clusters
+        nb_cluster = self.NB_CLUSTER
+        alg = K_Means(self.maze, nb_cluster, self.INITIAL_CHEESES)
+
+        result = alg.process((timeAllowed - (time.clock() - b_t)) * (95 / 100))
+
+        # Checks clusters
+        tot_cheeses = 0
+        for i in range(nb_cluster):
+            self.cluster[i] = result[1][i]
+            self.clusterMiddle[i] = result[0][i]
+
+            tot_cheeses += len(result[1][i])
+
+        print("## Clusters : " + repr(alg.k) + " clusters have been generated with " + str(tot_cheeses) + " cheeses")
+
+        # Check the total number of cheeses
+        if not (tot_cheeses == self.TOTAL_CHEESES):
+            print("# All cheeses has not been put in a cluster !!")
+            pass
+
+        # TODO : vérifié le nombre total de fromage, ajouté un cluster spécial pur les fromages non référencés
+        print("# Pre-execution executed in " + repr(time.clock() - b_t) + " seconds")
+
     def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed, PREPROCESSING = False):
         # If it's the first update (we are in the preprocessing)
         if PREPROCESSING:
-            b_t = time.clock()
-            # Create players
-            self.player = Player(playerLocation)
-            self.opponent = Opponent(opponentLocation)
-
-            # Create Metagraph
-            self.maze.createMetaGraph(piecesOfCheese)
-            print("## Metagraph generated in " + repr(time.clock() - b_t))
-
-            # Get the total number of cheeses
-            self.TOTAL_CHEESES = len(piecesOfCheese)
-            self.INITIAL_CHEESES = piecesOfCheese
-
-            # Create clusters
-            nb_cluster = self.NB_CLUSTER
-            alg = K_Means(self.maze, nb_cluster, self.INITIAL_CHEESES)
-
-            result = alg.process((timeAllowed - (time.clock() - b_t)) * (95/100))
-
-            print("## Clusters : " + repr(alg.k) + " clusters have been generated")
-
-            # Checks clusters
-            tot_cheeses = 0
-            for i in range(nb_cluster):
-                self.cluster.append((len(result[1][i]), result[1][i]))
-                self.clusterMiddle.append(result[0][i])
-                tot_cheeses += len(result[1][i])
-
-            # Check the total number of cheeses
-            if not tot_cheeses == len(piecesOfCheese):
-                print("# All cheeses has not been put in a cluster !!")
-                pass
-
-            # TODO : vérifié le nombre total de fromage, ajouté un cluster spécial pur les fromages non référencés
-
-            print("# Pre-execution executed in " + repr(time.clock() - b_t) + " seconds")
+            self.preprocessing(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
 
         b_t = time.clock()
-
         # Update cluster (delete old cheeses)
+        have_to_delete = []
         for cheese in self.CURRENT_CHEESES_LOCATION:
             if cheese not in piecesOfCheese:
-                for k in range(len(self.cluster)):
-                    if cheese in self.cluster[k][1]:
-
-                        self.cluster[k][1].remove(cheese)
+                for k in self.cluster:
+                    if cheese in self.cluster[k]:
+                        self.cluster[k].remove(cheese)
 
                     # If the cluster is empty, We delete it
-                    if len(self.cluster[k]) == 0:
-                        self.cluster.remove(self.cluster[k])
+                    if len(self.cluster[k]) == 0 and (k not in have_to_delete):
+                        have_to_delete.append(k)
+
+        # Delete empty cluster
+        print(self.cluster)
+        for k in have_to_delete:
+            del self.cluster[k]
 
         # Miscellaneous
         self.CURRENT_CHEESES_NB = len(piecesOfCheese)
