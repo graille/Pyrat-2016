@@ -8,11 +8,10 @@ import numpy as np
 class K_Means:
     def __init__(self, maze, k = 4, nodes = None):
         self.maze = maze
-        self.S = {}
-        self.m = {}
+        self.S = {} # Contain the elements of each cluster
+        self.m = {} # Contain the middle of each clusters
 
         self.k = k
-
         if nodes:
             self.setNodes(nodes)
 
@@ -31,10 +30,8 @@ class K_Means:
 
         # Add moy to metagraph
         self.maze.addNodeToMetagraph((x1, y1), self.nodes)
-        #print("Distance finded in " + repr(time.clock() - t))
+
         d = self.maze.distanceMetagraph[(x1, y1)][n]
-
-
 
         return d + np.sqrt(dx1**2 + dy1**2)
 
@@ -60,7 +57,6 @@ class K_Means:
                 self.m[nb][i] = self.nodes[i]
 
             while allowed_time > (time.clock() - t):
-
                 self.S[nb] = {}
                 self.m[nb + 1] = {}
                 for i in range(self.k):
@@ -79,9 +75,11 @@ class K_Means:
 
                     x, y = self.sommeTuplesInList(self.S[nb][i])
 
-                    self.m[nb + 1][i] = (x / len(self.S[nb][i]), y / len(self.S[nb][i]))
+                    if len(self.S[nb][i]) > 0:
+                        self.m[nb + 1][i] = (x / len(self.S[nb][i]), y / len(self.S[nb][i]))
+                    else:
+                        self.m[nb + 1][i] = self.m[nb][i]
                 nb += 1
 
-            print("## K-means executed in " + repr(allowed_time) + " seconds and " + repr(nb) + " operations")
-
+            print("## K-means executed in " + repr(time.clock() - t) + " seconds and " + repr(nb) + " operations")
             return (self.m[nb - 1], self.S[nb - 1])

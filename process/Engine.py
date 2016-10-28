@@ -39,6 +39,11 @@ class Engine:
 
         self.factors = {}
 
+        # Parameters
+        self.RENTABILITY_METHOD = 1
+        self.NB_CLUSTER = 6
+        self.RADAR = True
+
     def turn(self):
         t = time.clock()
 
@@ -91,22 +96,28 @@ class Engine:
             # In other cases
             else:
                 # Update clusters rentability
-                self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
+                if self.RENTABILITY_METHOD == 1:
+                    self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
+                    self.clusterRentability = []
 
-                self.clusterRentability = []
+                    for k in range(len(self.cluster)):
+                        r, nb = 0, 0
+                        if self.cluster[k][1]: # If the cluster is not empty
+                            # TODO : Verifier que l'adversaire n'est pas dans ce cluster actuelement
 
-                for k in range(len(self.cluster)):
-                    r, nb = 0, 0
-                    if self.cluster[k][1]: # If the cluster is not empty
-                        # TODO : Verifier que l'adversaire n'est pas dans ce cluster actuelement
+                            for n in self.cluster[k][1]:
+                                r += 1
+                                nb += self.factors[n]
 
-                        for n in self.cluster[k][1]:
-                            r += 1
-                            nb += self.factors[n]
+                            r = (len(self.cluster[k]) / (float(nb / r)), k)
 
-                        r = (len(self.cluster[k]) / (float(nb / r)), k)
+                            self.clusterRentability.append(r)
+                elif self.RENTABILITY_METHOD == 2:
+                    self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
+                    self.clusterRentability = []
 
-                        self.clusterRentability.append(r)
+                    for k in range(len(self.cluster)):
+                        pass
 
                 self.clusterRentability.sort()
                 b_r, b_k = self.clusterRentability[-1]
@@ -115,7 +126,8 @@ class Engine:
                 d, p = np.inf, [] # A remplacer par un glouton plus tard
                 k, init = 0, time.clock()
 
-                while (time.clock() - t) < (self.TIME_ALLOWED * 70/100):
+                time_limit = (self.TIME_ALLOWED * 80/100) if (time.clock() - t) < (self.TIME_ALLOWED * 90/100) else (time.clock() - t) + (50/100 * self.TIME_ALLOWED)
+                while (time.clock() - t) < time_limit:
                     # Execute twoOPT
                     to = TwoOPT(self.maze, self.cluster[b_k][1] + [self.player.location], self.TIME_ALLOWED * 20/100)
                     to.process()
@@ -128,20 +140,22 @@ class Engine:
                     k += 1
 
                 print("# Path of " + repr(d) + " found in " + repr(k) + " tests and " + repr(time.clock() - init) + " seconds")
-
                 # Set path
                 self.player.setPath(self.maze.convertMetaPathToRealPaths(p))
 
         # Radar
-        r_d, r_n = np.inf, None
-        for n in self.CURRENT_CHEESES_LOCATION:
-            # Check if we can have it
-            if self.maze.distanceMetagraph[self.player.location][n] <= 2:
+        if self.RADAR:
+            r_d, r_n = np.inf, None
+            for n in self.CURRENT_CHEESES_LOCATION:
+                # Check if we can have it
+                if self.maze.distanceMetagraph[self.player.location][n] <= 2:
+                    in_path = False
+                    # Check if the node is not in the path
+                    for li in self.player.path:
+                        if n in li:
+                            in_path = True
 
-                # Check if the node is not in the path
-                for li in self.player.path:
-                    if n not in li:
-
+                    if not in_path:
                         # Check if the node is not for the opponent
                         if self.maze.distanceMetagraph[self.player.location][n] <= self.maze.distanceMetagraph[self.opponent.location][n]:
 
@@ -149,8 +163,9 @@ class Engine:
                             if self.maze.distanceMetagraph[self.player.location][n] < r_d:
                                 r_d, r_n = self.maze.distanceMetagraph[self.player.location][n], n
 
-        if r_n:
-            self.player.setPath([self.maze.pathMetagraph[self.player.location][r_n]] + [self.maze.pathMetagraph[r_n][self.player.destination]] + self.player.path[1::])
+            if r_n:
+                print("#### Switched destination to " + repr(r_n))
+                self.player.setPath([self.maze.pathMetagraph[self.player.location][r_n]] + [self.maze.pathMetagraph[r_n][self.player.destination]] + self.player.path[1::])
 
         # Check
         if (not self.player.path) or len(self.player.path[0]) <= 1:
@@ -190,10 +205,8 @@ class Engine:
             self.TOTAL_CHEESES = len(piecesOfCheese)
             self.INITIAL_CHEESES = piecesOfCheese
 
-            # Add player and opponent to metaGraph
-
             # Create clusters
-            nb_cluster = round(self.TOTAL_CHEESES / 6)
+            nb_cluster = self.NB_CLUSTER
             alg = K_Means(self.maze, nb_cluster, self.INITIAL_CHEESES)
 
             result = alg.process((timeAllowed - (time.clock() - b_t)) * (95/100))

@@ -22,6 +22,7 @@ from debug.MazeViewer import *
 # Initialize vars
 TEAM_NAME = "Paul La Souris"
 engine = None
+nb_turn = 0
 
 def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed):
     global engine
@@ -35,19 +36,15 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     # Update with preprocessing argument
     engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100, True)
 
-    #mg = MazeViewer(mazeMap, mazeWidth, mazeHeight)
-    #for n in engine.cluster:
-    #    mg.showNodes(n[1], color=mg.PATH_COLOR[mg.CURRENT_PATH_COLOR])
-    #    mg.CURRENT_PATH_COLOR = (mg.CURRENT_PATH_COLOR + 1) % len(mg.PATH_COLOR)
-    #mg.show()
-
     print("Total preprocessing executed in " + repr(time.clock() - t))
     print()
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
     global engine
+    global nb_turn
+
     t = time.clock()
-    print("Begin turn")
+    print("Begin turn " + str(nb_turn))
 
     # Update
     engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
@@ -55,6 +52,8 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
 
     print('[' + repr(action) + '] in ' + repr(time.clock() - t))
     print()
+
+    nb_turn += 1
     return action
 
 if __name__ == "__main__":
