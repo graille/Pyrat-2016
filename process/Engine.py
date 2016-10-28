@@ -241,7 +241,6 @@ class Engine:
             print("# All cheeses has not been put in a cluster !!")
             pass
 
-        # TODO : vérifié le nombre total de fromage, ajouté un cluster spécial pur les fromages non référencés
         print("# Pre-execution executed in " + repr(time.clock() - b_t) + " seconds")
 
     def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed, PREPROCESSING = False):
@@ -280,7 +279,6 @@ class Engine:
         self.opponent.score = opponentScore
 
         # Update radius
-        self.CHECKER_RADIUS = 2
         self.TIME_ALLOWED = timeAllowed
 
         print("# Update executed in " + repr(time.clock() - b_t) + " seconds")
