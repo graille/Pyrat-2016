@@ -15,6 +15,8 @@ from algorithms.Kmeans import *
 
 # Import libs
 import time
+import numpy as np
+import numpy.linalg as lg
 
 class Engine:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
@@ -37,14 +39,36 @@ class Engine:
         self.clusterMiddle = {}
         self.clusterRentability = []
 
+        self.clusterDistance = {}
+
         self.factors = {}
 
         # Parameters
         self.RENTABILITY_METHOD = 1
-        self.NB_CLUSTER = 6 # between 2 and 90% du nombre totalde fromage
+        self.NB_CLUSTER = 10 # between 2 and 90% du nombre totalde fromage
 
         self.RADAR = True
-        self.RADAR_RADIUS = 2
+        self.RADAR_RADIUS = 1
+
+    def getClusterFactor(self, k):
+        r, nb = 0, 0
+        if self.cluster[k]:  # If the cluster is not empty
+            for n in self.cluster[k]:
+                r += 1
+                nb += self.factors[n]
+
+            return len(self.cluster[k]) / (float(nb / r))
+        else:
+            return 0
+
+    def getClusterDistance(self, i, j):
+        dist, nb = 0, 0
+        for n1 in self.cluster[i]:
+            for n2 in self.cluster[j]:
+                dist += self.maze.distanceMetagraph[n1][n2]
+                nb += 1
+
+        return dist / nb
 
     def turn(self):
         t = time.clock()
@@ -125,11 +149,44 @@ class Engine:
                     self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
                     self.clusterRentability = []
 
-                    for k in range(len(self.cluster)):
-                        pass
+                    A = np.zeros((len(self.cluster), len(self.cluster)))
+
+                    # Calculate factors
+                    for i in self.cluster:
+                        A[i][i] = 1
+
+                    # Create rentability matrix
+                    for i in self.cluster:
+                        for j in self.cluster:
+                            if j != i:
+                                d = - self.getClusterFactor(i) / self.clusterDistance[i][j]
+                                A[i][j] = d
+
+
+                    print(A)
+
+                    B = np.zeros((len(self.cluster), 1))
+
+
+                    for i in range(len(B)):
+                        B[i][0] = self.getClusterFactor(i)
+
+                    print(B)
+
+                    R = lg.solve(A, B)
+                    print(R)
+                    for k in self.cluster:
+                        self.clusterRentability.append((R[k][0], k))
 
                 self.clusterRentability.sort()
-                b_r, b_k = self.clusterRentability[-1]
+                b_r, b_k = self.clusterRentability.pop()
+
+                while len(self.cluster[b_k]) == 0:
+                    b_r, b_k = self.clusterRentability.pop()
+
+                print("Rentability : " + repr(self.clusterRentability))
+                print("Choose cluster " + str(b_k))
+
 
                 # Calculate Path
                 d, p = np.inf, [] # A remplacer par un glouton plus tard
@@ -236,6 +293,14 @@ class Engine:
 
         print("## Clusters : " + repr(alg.k) + " clusters have been generated with " + str(tot_cheeses) + " cheeses")
 
+        # Update clusters distance
+        for i in self.cluster:
+            self.clusterDistance[i] = {}
+            self.clusterDistance[i][i] = 0
+            for j in self.cluster:
+                if j != i:
+                    self.clusterDistance[i][j] = self.getClusterDistance(i, j)
+
         # Check the total number of cheeses
         if not (tot_cheeses == self.TOTAL_CHEESES):
             print("# All cheeses has not been put in a cluster !!")
@@ -250,7 +315,7 @@ class Engine:
 
         b_t = time.clock()
         # Update cluster (delete old cheeses)
-        have_to_delete = []
+#        have_to_delete = []
         for cheese in self.CURRENT_CHEESES_LOCATION:
             if cheese not in piecesOfCheese:
                 for k in self.cluster:
@@ -258,13 +323,13 @@ class Engine:
                         self.cluster[k].remove(cheese)
 
                     # If the cluster is empty, We delete it
-                    if len(self.cluster[k]) == 0 and (k not in have_to_delete):
-                        have_to_delete.append(k)
+#                    if len(self.cluster[k]) == 0 and (k not in have_to_delete):
+#                        have_to_delete.append(k)
 
         # Delete empty cluster
-        print(self.cluster)
-        for k in have_to_delete:
-            del self.cluster[k]
+#        print(self.cluster)
+#        for k in have_to_delete:
+#            del self.cluster[k]
 
         # Miscellaneous
         self.CURRENT_CHEESES_NB = len(piecesOfCheese)
