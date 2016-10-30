@@ -45,10 +45,16 @@ class Engine:
 
         # Parameters
         self.RENTABILITY_METHOD = 1
-        self.NB_CLUSTER = 10 # between 2 and 90% du nombre totalde fromage
+        self.NB_CLUSTER = 6 # between 2 and 90% du nombre totalde fromage
 
         self.RADAR = True
-        self.RADAR_RADIUS = 1
+        self.RADAR_RADIUS = 2
+        
+        # MODES
+        # Current mode : 2 = NORMAL
+                # 1 = TWO CHEESES
+                # 0 = ONE CHEESE
+        self.current_mode = 2
 
     def getClusterFactor(self, k):
         r, nb = 0, 0
@@ -88,7 +94,7 @@ class Engine:
                 (self.player.destination not in self.CURRENT_CHEESES_LOCATION or \
                 (self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= 2 and self.maze.distanceMetagraph[self.player.location][self.player.destination] > 2) or \
                 self.CURRENT_CHEESES_NB in [1, 2]):  # Si l'adversaire a déja manger notre fromage ou qu'il se trouve dans un rayon de 2 cases de celui-ci
-            self.player.setPath(None)
+            self.player.setPath(None) # On reset le path
 
         # If we need calculate a path
         if (not self.player.path) or \
@@ -98,13 +104,14 @@ class Engine:
             print("### No destination detected : " + repr(self.player.destination)) if not self.player.destination else ()
 
             # If there is only one cheese
-            if self.CURRENT_CHEESES_NB == 1:
+            if self.CURRENT_CHEESES_NB == 1 and self.current_mode != 0:
                 print("## ONE node mode")
                 d, p = self.maze.getFastestPath(self.player.location, self.CURRENT_CHEESES_LOCATION[0])
                 self.player.setPath([p])
-
+                self.current_mode = 0
+            
             # If there are 2 cheeses
-            elif self.CURRENT_CHEESES_NB == 2:
+            elif self.CURRENT_CHEESES_NB == 2 and self.current_mode != 1:
                 print("## TWO node mode")
                 factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
                 n1, n2 = self.CURRENT_CHEESES_LOCATION[0], self.CURRENT_CHEESES_LOCATION[1]
@@ -126,6 +133,7 @@ class Engine:
 
                 d, p = self.maze.getFastestPath(self.player.location, goal)
                 self.player.setPath([p])
+                self.current_mode = 1
 
             # In other cases
             else:
@@ -179,12 +187,14 @@ class Engine:
                         self.clusterRentability.append((R[k][0], k))
 
                 self.clusterRentability.sort()
+                print("Rentability : " + repr(self.clusterRentability))
+                
+                # Choose cluster
                 b_r, b_k = self.clusterRentability.pop()
 
                 while len(self.cluster[b_k]) == 0:
                     b_r, b_k = self.clusterRentability.pop()
-
-                print("Rentability : " + repr(self.clusterRentability))
+                
                 print("Choose cluster " + str(b_k))
 
 
