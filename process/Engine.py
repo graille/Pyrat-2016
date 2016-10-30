@@ -37,44 +37,53 @@ class Engine:
         # Cache clusters
         self.cluster = {}
         self.clusterMiddle = {}
+        self.clusterApproxMiddle = {}
         self.clusterRentability = []
 
         self.clusterDistance = {}
 
         self.factors = {}
 
-        # Parameters
-        self.RENTABILITY_METHOD = 1
-        self.NB_CLUSTER = 6 # between 2 and 90% du nombre totalde fromage
-
-        self.RADAR = True
-        self.RADAR_RADIUS = 2
-        
         # MODES
-        # Current mode : 2 = NORMAL
-                # 1 = TWO CHEESES
-                # 0 = ONE CHEESE
+            # Current mode : 2 = NORMAL
+            # 1 = TWO CHEESES
+            # 0 = ONE CHEESE
         self.current_mode = 2
 
-    def getClusterFactor(self, k):
-        r, nb = 0, 0
-        if self.cluster[k]:  # If the cluster is not empty
-            for n in self.cluster[k]:
-                r += 1
-                nb += self.factors[n]
+        # Parameters
+        self.FACTOR_METHOD = 1 # [1,2]
+        self.RENTABILITY_METHOD = 2 # [1, 2]
+        self.NB_CLUSTER = 8 # [2 - 10]
 
-            return len(self.cluster[k]) / (float(nb / r))
-        else:
-            return 0
+        self.RADAR = True # [True, False]
+        self.RADAR_RADIUS = 2 # [0 - 5]
+
+        self.ABORT_RADIUS = 2 # [0 - 7]
+
+    def getClusterFactor(self, k):
+        if self.FACTOR_METHOD == 1:
+            r, nb = 0, 0
+            if self.cluster[k]:  # If the cluster is not empty
+                for n in self.cluster[k]:
+                    r += 1
+                    nb += self.factors[n]
+
+                return len(self.cluster[k]) / (float(nb / r))
+            else:
+                return 0
+        elif self.FACTOR_METHOD == 2:
+            nb = 1
+            if self.cluster[k]:  # If the cluster is not empty
+                for n in self.cluster[k]:
+                    nb *= self.factors[n]
+
+                return len(self.cluster[k]) / nb
+            else:
+                return 0
+
 
     def getClusterDistance(self, i, j):
-        dist, nb = 0, 0
-        for n1 in self.cluster[i]:
-            for n2 in self.cluster[j]:
-                dist += self.maze.distanceMetagraph[n1][n2]
-                nb += 1
-
-        return dist / nb
+        return self.maze.distanceMetagraph[self.clusterApproxMiddle[i]][self.clusterApproxMiddle[j]]
 
     def turn(self):
         t = time.clock()
@@ -92,7 +101,7 @@ class Engine:
         # In case of particular reaction
         if self.player.destination and \
                 (self.player.destination not in self.CURRENT_CHEESES_LOCATION or \
-                (self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= 2 and self.maze.distanceMetagraph[self.player.location][self.player.destination] > 2) or \
+                (self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= self.ABORT_RADIUS and self.maze.distanceMetagraph[self.player.location][self.player.destination] > self.ABORT_RADIUS) or \
                 self.CURRENT_CHEESES_NB in [1, 2]):  # Si l'adversaire a déja manger notre fromage ou qu'il se trouve dans un rayon de 2 cases de celui-ci
             self.player.setPath(None) # On reset le path
 
@@ -143,15 +152,9 @@ class Engine:
                     self.clusterRentability = []
 
                     for k in self.cluster:
-                        r, nb = 0, 0
-                        if self.cluster[k]: # If the cluster is not empty
-                            for n in self.cluster[k]:
-                                r += 1
-                                nb += self.factors[n]
+                        rent = (self.getClusterFactor(k), k)
 
-                            rent = (len(self.cluster[k]) / (float(nb / r)), k)
-
-                            self.clusterRentability.append(rent)
+                        self.clusterRentability.append(rent)
 
                 elif self.RENTABILITY_METHOD == 2:
                     self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
@@ -159,17 +162,14 @@ class Engine:
 
                     A = np.zeros((len(self.cluster), len(self.cluster)))
 
-                    # Calculate factors
+                    # Create rentability matrix
                     for i in self.cluster:
                         A[i][i] = 1
 
-                    # Create rentability matrix
-                    for i in self.cluster:
                         for j in self.cluster:
                             if j != i:
                                 d = - self.getClusterFactor(i) / self.clusterDistance[i][j]
                                 A[i][j] = d
-
 
                     print(A)
 
@@ -200,12 +200,15 @@ class Engine:
 
                 # Calculate Path
                 d, p = np.inf, [] # A remplacer par un glouton plus tard
-                k, init = 0, time.clock()
+                init = time.clock()
 
-                time_limit = (self.TIME_ALLOWED * 80/100) if (time.clock() - t) < (self.TIME_ALLOWED * 90/100) else (time.clock() - t) + (50/100 * self.TIME_ALLOWED)
-                while (time.clock() - t) < time_limit:
+                NB_TESTS = 100
+                for k in range(NB_TESTS):
+                    if time.clock() - t > (self.TIME_ALLOWED * 80/100):
+                        break
+
                     # Execute twoOPT
-                    to = TwoOPT(self.maze, self.cluster[b_k] + [self.player.location], self.TIME_ALLOWED * 20/100)
+                    to = TwoOPT(self.maze, self.cluster[b_k] + [self.player.location], self.TIME_ALLOWED * 10/100)
                     to.process()
 
                     d_t, p_t = to.getResult(self.player.location)
@@ -213,9 +216,7 @@ class Engine:
                     if d_t < d:
                         d, p = d_t, p_t
 
-                    k += 1
-
-                print("# Path of " + repr(d) + " found in " + repr(k) + " tests and " + repr(time.clock() - init) + " seconds")
+                print("# Path of " + repr(d) + " found in " + repr(NB_TESTS) + " tests and " + repr(time.clock() - init) + " seconds")
 
                 # Set path
                 self.player.setPath(self.maze.convertMetaPathToRealPaths(p))
@@ -281,6 +282,7 @@ class Engine:
 
         # Create Metagraph
         self.maze.createMetaGraph(piecesOfCheese)
+
         print("## Metagraph generated in " + repr(time.clock() - b_t))
 
         # Get the total number of cheeses
@@ -291,25 +293,31 @@ class Engine:
         nb_cluster = self.NB_CLUSTER
         alg = K_Means(self.maze, nb_cluster, self.INITIAL_CHEESES)
 
-        result = alg.process((timeAllowed - (time.clock() - b_t)) * (95 / 100))
+        # TIME : result = alg.process((timeAllowed - (time.clock() - b_t)) * (95 / 100))
+        # ITERATION :
+        result = alg.process(None, 100)
 
         # Checks clusters
         tot_cheeses = 0
         for i in range(nb_cluster):
             self.cluster[i] = result[1][i]
             self.clusterMiddle[i] = result[0][i]
+            self.clusterApproxMiddle[i] = (round(result[0][i][0]), round(result[0][i][1]))
 
             tot_cheeses += len(result[1][i])
+
+        # Add approxs middles to metagraph
+        middle_list = [self.clusterApproxMiddle[j] for j in self.cluster]
+        for i in self.cluster:
+            self.maze.addNodeToMetagraph(self.clusterApproxMiddle[i], middle_list)
 
         print("## Clusters : " + repr(alg.k) + " clusters have been generated with " + str(tot_cheeses) + " cheeses")
 
         # Update clusters distance
         for i in self.cluster:
             self.clusterDistance[i] = {}
-            self.clusterDistance[i][i] = 0
             for j in self.cluster:
-                if j != i:
-                    self.clusterDistance[i][j] = self.getClusterDistance(i, j)
+                self.clusterDistance[i][j] = self.getClusterDistance(i, j)
 
         # Check the total number of cheeses
         if not (tot_cheeses == self.TOTAL_CHEESES):
@@ -318,28 +326,19 @@ class Engine:
 
         print("# Pre-execution executed in " + repr(time.clock() - b_t) + " seconds")
 
-    def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed, PREPROCESSING = False):
+    def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
         # If it's the first update (we are in the preprocessing)
-        if PREPROCESSING:
+        if (not self.player) or (not self.opponent):
             self.preprocessing(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
 
         b_t = time.clock()
+
         # Update cluster (delete old cheeses)
-#        have_to_delete = []
         for cheese in self.CURRENT_CHEESES_LOCATION:
             if cheese not in piecesOfCheese:
                 for k in self.cluster:
                     if cheese in self.cluster[k]:
                         self.cluster[k].remove(cheese)
-
-                    # If the cluster is empty, We delete it
-#                    if len(self.cluster[k]) == 0 and (k not in have_to_delete):
-#                        have_to_delete.append(k)
-
-        # Delete empty cluster
-#        print(self.cluster)
-#        for k in have_to_delete:
-#            del self.cluster[k]
 
         # Miscellaneous
         self.CURRENT_CHEESES_NB = len(piecesOfCheese)
@@ -370,18 +369,15 @@ class Engine:
             return factors
         except KeyError:
             print("# Factors calculated without metaGraph")
-            alg = Dijkstra(self.maze)
 
             # Calculate for player
-            alg.setGoal(None)
-            alg.setOrigin(self.player.location)
+            alg = Dijkstra(self.maze, self.player.location, None)
             alg.process()
 
             playerResult = alg.dist
 
             # Calculate for opponent
-            alg.setGoal(None)
-            alg.setOrigin(self.opponent.location)
+            alg = Dijkstra(self.maze, self.opponent.location, None)
             alg.process()
 
             opponentResult = alg.dist

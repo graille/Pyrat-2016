@@ -47,7 +47,15 @@ class K_Means:
 
         return (x, y)
 
-    def process(self, allowed_time):
+    def checkLoop(self, allowed_time, iterations, t, nb):
+        if allowed_time:
+            return allowed_time > (time.clock() - t)
+        elif iterations:
+            return iterations > nb
+        else:
+            raise Exception("Invalid parameters")
+
+    def process(self, allowed_time = None, iterations = None):
         if self.NB_NODES >= self.k:
             t, nb = time.clock(), 0
 
@@ -56,7 +64,7 @@ class K_Means:
             for i in range(self.k):
                 self.m[nb][i] = self.nodes[i]
 
-            while allowed_time > (time.clock() - t):
+            while self.checkLoop(allowed_time, iterations, t, nb):
                 self.S[nb] = {}
                 self.m[nb + 1] = {}
                 for i in range(self.k):

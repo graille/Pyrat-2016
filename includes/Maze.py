@@ -8,7 +8,6 @@ import numpy as np
 
 # Import algorithms
 from algorithms.Astar import *
-from algorithms.FloydWarshall import *
 from algorithms.Dijkstra import *
 
 class Maze:

@@ -41,7 +41,7 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
         engine.RENTABILITY_METHOD = 1
 
     # Update with preprocessing argument
-    engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100, True)
+    engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100)
 
     print("Total preprocessing executed in " + repr(time.clock() - t))
     print()
