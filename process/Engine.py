@@ -52,8 +52,8 @@ class Engine:
 
         # Parameters
         self.FACTOR_METHOD = 1 # [1,2]
-        self.RENTABILITY_METHOD = 2 # [1, 2]
-        self.NB_CLUSTER = 8 # [2 - 10]
+        self.RENTABILITY_METHOD = 1 # [1, 2]
+        self.NB_CLUSTER = 6 # [2 - 10]
 
         self.RADAR = True # [True, False]
         self.RADAR_RADIUS = 2 # [0 - 5]
