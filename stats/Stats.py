@@ -28,14 +28,17 @@ OUTPUT_FILE = "./out/results.csv"
 PLAYER_1_FILENAME = "./in/Pyrat-2016/test.py"
 PLAYER_2_FILENAME = "./in/Glouton.py"
 
-configs = [repr(NB_CLUSTER) + ';' + repr(FACTOR_METHOD) + ';' + repr(RENTABILITY_METHOD) + ';' + repr(RADAR_RADIUS) + ';' + repr(ABORT_RADIUS) \
-           for NB_CLUSTER in range(2, 11) \
-           for FACTOR_METHOD in [1, 2] \
-           for RENTABILITY_METHOD in [1, 2] \
-           for RADAR_RADIUS in range(6) \
-           for ABORT_RADIUS in range(6)]
+configs = [repr(NB_CLUSTER) + ';' + repr(FACTOR_METHOD) + ';' + repr(RENTABILITY_METHOD) + ';' + repr(RADAR_RADIUS) + ';' + repr(ABORT_RADIUS) + ';' + repr(OPPONENT_ABORT_RADIUS) \
+           for NB_CLUSTER in range(4, 11) \
+           for FACTOR_METHOD in [1] \
+           for RENTABILITY_METHOD in [1, 5] \
+           for RADAR_RADIUS in range(4) \
+           for ABORT_RADIUS in range(1, 5) \
+           for OPPONENT_ABORT_RADIUS in range(4, 12, 2)]
 
-NB_ITERATION = 1
+print(configs)
+
+NB_ITERATION = 2
 
 print(len(configs))
 for c in configs:

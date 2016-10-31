@@ -119,7 +119,9 @@ class Engine:
 
         print("## Metagraph addition executed in " + str(time.clock() - t))
 
-        # In case of particular reaction
+
+        ############################################### SWITCHER MODULE ################################################
+
         if self.player.destination:
             CHECKS = {}
 
@@ -130,6 +132,7 @@ class Engine:
                 CHECKS['PLAYER_DESTINATION'] = self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= self.ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination]
                 CHECKS['OPPONENT_DESTINATION'] = (self.player.destination == self.opponent.destination) and (self.maze.distanceMetagraph[self.opponent.location][self.opponent.destination] <= self.OPPONENT_ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination])
 
+            # Check
             CHECKS_RESULT = False
             for k in CHECKS:
                 CHECKS_RESULT = CHECKS_RESULT or CHECKS[k]
@@ -148,8 +151,9 @@ class Engine:
                     if erase:
                         self.player.setPath(None)
                 else:
-                    self.player.setPath(None)  # On reset le path
+                    self.player.setPath(None)
 
+        ############################################### PATH MODULE ####################################################
         # If we need calculate a path
         if (not self.player.path) or \
                 (len(self.player.path) == 1 and len(self.player.path[0]) <= 1) or \
