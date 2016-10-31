@@ -120,20 +120,24 @@ class Engine:
         print("## Metagraph addition executed in " + str(time.clock() - t))
 
         # In case of particular reaction
-        CHECKS = {}
-        CHECKS['CHEESES_LOCATION'] = self.player.destination not in self.CURRENT_CHEESES_LOCATION
-        CHECKS['PLAYER_DESTINATION'] = self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= self.ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination]
-        CHECKS['CHEESES_NB'] = self.CURRENT_CHEESES_NB in [1, 2]
-        CHECKS['OPPONENT_DESTINATION'] = (self.player.destination == self.opponent.destination) and (self.maze.distanceMetagraph[self.opponent.location][self.opponent.destination] <= OPPONENT_ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination])
+        if self.player.destination:
+            CHECKS = {}
         
-        CHECKS_RESULT = True
-        for k in CHECKS:
-            CHECKS_RESULT = CHECKS_RESULT or CHECKS[k]
+            CHECKS['CHEESES_LOCATION'] = self.player.destination not in self.CURRENT_CHEESES_LOCATION
+            CHECKS['PLAYER_DESTINATION'] = self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= self.ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination]
+            CHECKS['CHEESES_NB'] = self.CURRENT_CHEESES_NB in [1, 2]
+            CHECKS['OPPONENT_DESTINATION'] = (self.player.destination == self.opponent.destination) and (self.maze.distanceMetagraph[self.opponent.location][self.opponent.destination] <= OPPONENT_ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination])
+            
+            print(CHECKS)
+            
+            CHECKS_RESULT = False
+            for k in CHECKS:
+                CHECKS_RESULT = CHECKS_RESULT or CHECKS[k]
         
-        if self.player.destination and CHECKS_RESULT:
-            self.player.setPath(None) # On reset le path
-            if (CHECKS['PLAYER_DESTINATION'] or CHECKS['OPPONENT_DESTINATION']) and (not CHECKS['CHEESES_NB']):
-                self.CURRENT_CHEESES_LOCATION.remove(self.player.destination)
+            if CHECKS_RESULT:
+                self.player.setPath(None) # On reset le path
+                if (CHECKS['PLAYER_DESTINATION'] or CHECKS['OPPONENT_DESTINATION']) and (not CHECKS['CHEESES_NB']):
+                    self.CURRENT_CHEESES_LOCATION.remove(self.player.destination)
             
 
         # If we need calculate a path
@@ -216,6 +220,7 @@ class Engine:
                     # ICI : SANS FACTEUR DE COMMUNAUTE
 
                 elif self.RENTABILITY_METHOD == 4:
+                    self.clusterRentability = []
                     warning_ratio = {}
                     for k in self.cluster:
                         d_p, d_o = 0, 0
@@ -267,6 +272,7 @@ class Engine:
                         self.clusterRentability.append((R[k][0], k))
 
                 elif self.RENTABILITY_METHOD == 5:
+                    self.clusterRentability = []
                     warning_ratio = {}
                     for k in self.cluster:
                         d_p, d_o = 0, 0
