@@ -465,6 +465,7 @@ if __name__ == "__main__":
 
     print("Cheeses : " + repr(cheeses))
     preprocessing(mazeMap, w, h, player_origin, opponent_origin, cheeses, 3)
+    turn(mazeMap, w, h, current_player, current_opponent, 0, 0, cheeses.copy(), 0.1)
     #
     # while cheeses:
     #     print("TOUR " + str(nb_turn))
