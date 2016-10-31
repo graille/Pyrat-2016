@@ -108,8 +108,8 @@ class Engine:
     #### ACTIONS MANAGEMENT
     def turn(self):
         t = time.clock()
-        print("## Current cheeses : " + repr(self.CURRENT_CHEESES_LOCATION))
-        print('## Current path : ' + repr(self.player.path))
+        #print("## Current cheeses : " + repr(self.CURRENT_CHEESES_LOCATION))
+        #print('## Current path : ' + repr(self.player.path))
 
         # Add player and opponent to metaGraph
         self.maze.addNodeToMetagraph(self.player.location, self.CURRENT_CHEESES_LOCATION)

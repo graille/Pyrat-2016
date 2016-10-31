@@ -4,7 +4,7 @@
 import sys
 import os
 
-#from stats.LaunchersLibrary import *
+from stats.LaunchersLibrary import *
 
 # Maze configuration
 MAZE_WIDTH = 25
@@ -28,10 +28,15 @@ OUTPUT_FILE = "./out/results.csv"
 PLAYER_1_FILENAME = "./in/Pyrat-2016/stat.py"
 PLAYER_2_FILENAME = "./in/Glouton.py"
 
-configs = [repr(RENTABILITY_METHOD) \
-           for RENTABILITY_METHOD in [1, 2, 3]]
+configs = [repr(NB_CLUSTER) + ';' + repr(FACTOR_METHOD) + ';' + repr(RENTABILITY_METHOD) + ';' + repr(RADAR_RADIUS) + ';' + repr(ABORT_RADIUS) + ';' + repr(OPPONENT_ABORT_RADIUS) \
+           for NB_CLUSTER in [6] \
+           for FACTOR_METHOD in [1] \
+           for RENTABILITY_METHOD in [1, 2, 3] \
+           for RADAR_RADIUS in [2] \
+           for ABORT_RADIUS in [4] \
+           for OPPONENT_ABORT_RADIUS in [10]]
 
-NB_ITERATION = 20
+NB_ITERATION = 50
 TOTAL_ITERATION = len(configs) * NB_ITERATION
 
 print("Nombre de tests : " + str(TOTAL_ITERATION))
@@ -54,17 +59,27 @@ for c in configs:
 
     PLAYER_VICTORIES = 0
     OPPONENT_VICTORIES = 0
+    EQUALITIES = 0
 
     for k in range(NB_ITERATION):
-        try:
-            result = startRandomGame(MAZE_WIDTH, MAZE_HEIGHT, MAZE_DENSITIES, MUD_PROBABILITY, MAZE_SYMMETRIC, NB_PIECES_OF_CHEESE, PREPROCESSING_TIME, TURN_TIME, GAME_MODE, OUTPUT_DIRECTORY, TIMEOUT, PLAYER_1_FILENAME, PLAYER_2_FILENAME)
+        result = startRandomGame(MAZE_WIDTH, MAZE_HEIGHT, MAZE_DENSITIES, MUD_PROBABILITY, MAZE_SYMMETRIC, NB_PIECES_OF_CHEESE, PREPROCESSING_TIME, TURN_TIME, GAME_MODE, OUTPUT_DIRECTORY, TIMEOUT, PLAYER_1_FILENAME, PLAYER_2_FILENAME)
 
-            PLAYER_RESULTS = result['player1']
-            OPPONENT_RESULT = result['player2']
+        PLAYER_RESULTS = result['player1']
+        OPPONENT_RESULT = result['player2']
 
-        except Exception:
-            NB_ERROR += 1
-            continue
+        PLAYER_SCORES.append(PLAYER_RESULTS['score'])
+        OPPONENT_SCORES.append(PLAYER_RESULTS['score'])
+
+        PLAYER_PREPROCESSING_TIME.append(PLAYER_RESULTS['totalComputationTime'])
+        PLAYER_TURN_TIME.append(PLAYER_RESULTS['meanComputationTime'])
+        PLAYER_MISSED.append(PLAYER_RESULTS['nbTimingsMissed'])
+
+        if PLAYER_RESULTS['score'] == OPPONENT_RESULT['score']:
+            EQUALITIES += 1
+        elif PLAYER_RESULTS['score'] > OPPONENT_RESULT['score']:
+            PLAYER_VICTORIES += 1
+        else:
+            OPPONENT_VICTORIES +=1
 
     if not PLAYER_SCORES:
         PLAYER_SCORES.append(-1)
