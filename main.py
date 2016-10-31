@@ -4,8 +4,6 @@
 import os
 import sys
 
-from process.Engine import *
-
 # Set the syspath
 f_name = "main.py"
 a_path = str(os.path.abspath(__file__))
@@ -13,6 +11,8 @@ new_sys_entry = a_path[0:len(a_path) - len(f_name)]
 
 print("Add " + new_sys_entry + "to sys path")
 sys.path.insert(0, new_sys_entry)
+
+from process.Engine import *
 
 # Initialize vars
 TEAM_NAME = "Paul La Souris"
