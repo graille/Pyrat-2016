@@ -244,3 +244,26 @@ class Maze:
         n_list.sort()
 
         return n_list[0] if len(n_list) > 0 else (0, [])
+
+
+    def getGloutonPath(self, origin, cheeses):
+        p, d = [origin], 0
+        current_location = origin
+        temp = cheeses.copy()
+
+        while temp:
+            way = [(self.distanceMetagraph[current_location][c], c) for c in temp]
+            way.sort()
+
+            current_location = way[0][1]
+            temp.remove(current_location)
+
+            p.append(current_location)
+            d += way[0][0]
+
+        return (d, p)
+
+
+
+
+

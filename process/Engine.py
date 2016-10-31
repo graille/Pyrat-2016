@@ -52,7 +52,7 @@ class Engine:
 
         # Parameters
         self.FACTOR_METHOD = 1 # [1,2]
-        self.RENTABILITY_METHOD = 5 # [1, 2, 3]
+        self.RENTABILITY_METHOD = 3 # [1, 2, 3]
         self.NB_CLUSTER = 2 # [2 - 10]
 
         self.RADAR_RADIUS = 2 # [0 - 5]
@@ -108,6 +108,8 @@ class Engine:
     #### ACTIONS MANAGEMENT
     def turn(self):
         t = time.clock()
+        print("## Current cheeses : " + repr(self.CURRENT_CHEESES_LOCATION))
+        print('## Current path : ' + repr(self.player.path))
 
         # Add player and opponent to metaGraph
         self.maze.addNodeToMetagraph(self.player.location, self.CURRENT_CHEESES_LOCATION)
@@ -125,8 +127,9 @@ class Engine:
         if self.player.destination:
             CHECKS = {}
 
+            # List verification
             CHECKS['CHEESES_LOCATION'] = self.player.destination not in self.CURRENT_CHEESES_LOCATION
-            CHECKS['CHEESES_NB'] = self.CURRENT_CHEESES_NB in [1, 2]
+            CHECKS['CHEESES_NB'] = self.CURRENT_CHEESES_NB in [1, 2] and (self.current_mode not in [0,1])
 
             if not CHECKS['CHEESES_LOCATION']:
                 CHECKS['PLAYER_DESTINATION'] = self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= self.ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination]
@@ -154,7 +157,7 @@ class Engine:
                     self.player.setPath(None)
 
         ############################################### PATH MODULE ####################################################
-        # If we need calculate a path
+
         if (not self.player.path) or \
                 (len(self.player.path) == 1 and len(self.player.path[0]) <= 1) or \
                 (not self.player.destination):
@@ -162,14 +165,14 @@ class Engine:
             print("### No destination detected : " + repr(self.player.destination)) if not self.player.destination else ()
 
             # If there is only one cheese
-            if self.CURRENT_CHEESES_NB == 1 and self.current_mode != 0:
+            if self.CURRENT_CHEESES_NB == 1:
                 print("## ONE node mode")
                 d, p = self.maze.getFastestPath(self.player.location, self.CURRENT_CHEESES_LOCATION[0])
                 self.player.setPath([p])
                 self.current_mode = 0
             
             # If there are 2 cheeses
-            elif self.CURRENT_CHEESES_NB == 2 and self.current_mode != 1:
+            elif self.CURRENT_CHEESES_NB == 2:
                 print("## TWO node mode")
                 factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
                 n1, n2 = self.CURRENT_CHEESES_LOCATION[0], self.CURRENT_CHEESES_LOCATION[1]
@@ -194,7 +197,7 @@ class Engine:
                 self.current_mode = 1
 
             # In other cases
-            else:
+            elif self.current_mode == 2:
                 # Update clusters rentability
                 if self.RENTABILITY_METHOD == 1:
                     self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
@@ -204,37 +207,29 @@ class Engine:
                         rent = (self.getClusterFactor(k), k)
 
                         self.clusterRentability.append(rent)
-
                 elif self.RENTABILITY_METHOD == 2:
-                    self.factors = self.calculateFactors(self.CURRENT_CHEESES_LOCATION)
                     self.clusterRentability = []
 
-                    A = np.zeros((len(self.cluster), len(self.cluster)))
-
-                    # Create rentability matrix
-                    for i in self.cluster:
-                        A[i][i] = 1
-
-                        for j in self.cluster:
-                            if j != i:
-                                d = - self.getClusterFactor(i) / self.clusterDistance[i][j]
-                                A[i][j] = d
-
-                    B = np.zeros((len(self.cluster), 1))
-
-                    for i in range(len(B)):
-                        B[i][0] = self.getClusterFactor(i)
-
-                    R = lg.solve(A, B)
+                    # Calcul du facteur de risque
+                    warning_ratio = {}
                     for k in self.cluster:
-                        self.clusterRentability.append((R[k][0], k))
+                        d_p, d_o = 0, 0
+                        if self.cluster[k]:  # If the cluster is not empty
+                            for n in self.cluster[k]:
+                                d_p += self.maze.distanceMetagraph[self.player.location][n]
+                                d_o += self.maze.distanceMetagraph[self.opponent.location][n]
 
+                            m = len(self.cluster[k])
+                            warning_ratio[k] = (2 * self.getClusterZeta(k) + (d_p / m)) / (d_o / m)
+                        else:
+                            warning_ratio[k] = 1 # On s'en fou car ça va etre nul apres
+
+                    for k in self.cluster:
+                        self.clusterRentability.append((len(self.cluster[k]) / warning_ratio[k], k))
                 elif self.RENTABILITY_METHOD == 3:
-                    pass
-                    # ICI : SANS FACTEUR DE COMMUNAUTE
-
-                elif self.RENTABILITY_METHOD == 4:
                     self.clusterRentability = []
+
+                    # Calcul du facteur de risque
                     warning_ratio = {}
                     for k in self.cluster:
                         d_p, d_o = 0, 0
@@ -259,59 +254,7 @@ class Engine:
 
                     D = D / nb
 
-                    print("D : " + repr(D))
-
-                    A = np.zeros((len(self.cluster), len(self.cluster)))
-
-                    # Create rentability matrix
-                    for i in self.cluster:
-                        A[i][i] = 1
-
-                        for j in self.cluster:
-                            if j != i:
-                                di = - D * len(self.cluster[i]) / (self.getClusterDistance(i, j) * warning_ratio[i])
-                                A[i][j] = di
-
-                    print(A)
-
-                    B = np.zeros((len(self.cluster), 1))
-
-                    for i in range(len(B)):
-                        B[i][0] = len(self.cluster[i]) / warning_ratio[i]
-
-                    print(B)
-
-                    R = lg.solve(A, B)
-                    for k in self.cluster:
-                        self.clusterRentability.append((R[k][0], k))
-
-                elif self.RENTABILITY_METHOD == 5:
-                    self.clusterRentability = []
-                    warning_ratio = {}
-                    for k in self.cluster:
-                        d_p, d_o = 0, 0
-                        if self.cluster[k]:  # If the cluster is not empty
-                            for n in self.cluster[k]:
-                                d_p += self.maze.distanceMetagraph[self.player.location][n]
-                                d_o += self.maze.distanceMetagraph[self.opponent.location][n]
-
-                            m = len(self.cluster[k])
-                            warning_ratio[k] = (2 * self.getClusterZeta(k) + (d_p / m)) / (d_o / m)
-                        else:
-                            warning_ratio[k] = 1 # On s'en fou car ça va etre nul apres
-
-                    #print(warning_ratio)
-                    # Calcul de D
-                    D, nb = 0, 0
-
-                    for i in self.cluster:
-                        for j in self.cluster:
-                            if i != j:
-                                D += self.getClusterDistance(i, j)
-                                nb += 1
-
-                    D = D / nb
-
+                    # Calcul du ratio de communauté
                     community_ratio = {}
 
                     for i in self.cluster:
@@ -320,11 +263,9 @@ class Engine:
                             if i != j:
                                 r += len(self.cluster[j]) / (warning_ratio[j] * self.getClusterDistance(i, j))
 
-                        r = 1 + D*r
+                        r = 1 + D * r
 
                         community_ratio[i] = r
-
-                    #print(community_ratio)
 
                     for k in self.cluster:
                         self.clusterRentability.append((len(self.cluster[k]) * community_ratio[k] / warning_ratio[k], k))
@@ -340,12 +281,13 @@ class Engine:
                 
                 print("## Choose cluster " + str(b_k) + " : " + repr(self.cluster[b_k]))
 
-
                 # Calculate Path
-                d, p = np.inf, [] # A remplacer par un glouton plus tard
+                d, p = self.maze.getGloutonPath(self.player.location, self.cluster[b_k])
                 init = time.clock()
 
-                NB_TESTS = 100
+                print("### Glouton path : " + str(d))
+
+                NB_TESTS, NB_REAL_TESTS = 80, 0
                 for k in range(NB_TESTS):
                     if time.clock() - t > (self.TIME_ALLOWED * 80/100):
                         break
@@ -359,12 +301,16 @@ class Engine:
                     if d_t < d:
                         d, p = d_t, p_t
 
-                print("# Path of " + repr(d) + " found in " + repr(NB_TESTS) + " tests and " + repr(time.clock() - init) + " seconds")
+                    NB_REAL_TESTS += 1
+
+                print("# Path of " + repr(d) + " found in " + repr(NB_REAL_TESTS) + " tests and " + repr(time.clock() - init) + " seconds")
 
                 # Set path
                 self.player.setPath(self.maze.convertMetaPathToRealPaths(p))
+            else:
+                pass
+        ############################################### RADAR MODULE ####################################################
 
-        # Radar
         if self.RADAR_RADIUS > 0:
             r_d, r_n = np.inf, None
             for n in self.CURRENT_CHEESES_LOCATION:
@@ -388,7 +334,8 @@ class Engine:
                 print("#### Switched destination to " + repr(r_n))
                 self.player.setPath([self.maze.pathMetagraph[self.player.location][r_n]] + [self.maze.pathMetagraph[r_n][self.player.destination]] + self.player.path[1::])
 
-        # Check
+        ############################################### RETURN MODULE ####################################################
+
         if (not self.player.path) or len(self.player.path[0]) <= 1:
             raise Exception("LE PATH EST VIDE ! " + repr(self.player.path) + " | Cheeses ("+ repr(len(self.CURRENT_CHEESES_LOCATION)) + ") " + repr(self.CURRENT_CHEESES_LOCATION))
 
@@ -400,15 +347,13 @@ class Engine:
         # Return path
         print("# Turn executed in " + repr(time.clock() - t) + " seconds")
 
-        if time.clock() - t > 0.1:
-            raise Exception("Temps dépasser")
         try:
             return self.maze.getMove(current_node, next_node)
         except TypeError:
             print("ERROR")
             print("Path : " + repr(self.player.path))
             print("Cheeses : " + repr(self.CURRENT_CHEESES_LOCATION))
-            exit()
+            self.player.setPath(None)
 
     def preprocessing(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
         b_t = time.clock()
@@ -497,7 +442,7 @@ class Engine:
 
         print("# Update executed in " + repr(time.clock() - b_t) + " seconds")
 
-    #### MIS
+    #### MISCELLANEOUS
     def calculateFactors(self, nodes):
         try:
             # Calculate factors

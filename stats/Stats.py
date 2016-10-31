@@ -29,21 +29,23 @@ PLAYER_1_FILENAME = "./in/Pyrat-2016/test.py"
 PLAYER_2_FILENAME = "./in/Glouton.py"
 
 configs = [repr(NB_CLUSTER) + ';' + repr(FACTOR_METHOD) + ';' + repr(RENTABILITY_METHOD) + ';' + repr(RADAR_RADIUS) + ';' + repr(ABORT_RADIUS) + ';' + repr(OPPONENT_ABORT_RADIUS) \
-           for NB_CLUSTER in range(4, 11) \
+           for NB_CLUSTER in range(3, 10) \
            for FACTOR_METHOD in [1] \
-           for RENTABILITY_METHOD in [1, 5] \
+           for RENTABILITY_METHOD in [1, 2, 3] \
            for RADAR_RADIUS in range(4) \
            for ABORT_RADIUS in range(1, 5) \
            for OPPONENT_ABORT_RADIUS in range(4, 12, 2)]
 
-print(configs)
-
 NB_ITERATION = 2
+TOTAL_ITERATION = len(configs) * NB_ITERATION
 
-print(len(configs))
+print("Nombre de tests : " + str(TOTAL_ITERATION))
+print("Temps estimé : " + str(TOTAL_ITERATION * 20 / 3600) + " heures")
+
+num_config = 0
 for c in configs:
     with open(OUTPUT_FILE, "a") as file:
-        file.write(c)
+        file.write(repr(num_config) + ';' + c)
 
     NB_ERROR = 0
 
