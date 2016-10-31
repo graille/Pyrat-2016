@@ -37,6 +37,10 @@ class Rat:
 
                 if verbose:
                     print("### Path updated : switch to destination " + repr(self.destination))
+
+            else:
+                self.path = []
+                self.destination = None
         else:
             self.path = []
             self.destination = None

@@ -53,13 +53,13 @@ class Engine:
         # Parameters
         self.FACTOR_METHOD = 1 # [1,2]
         self.RENTABILITY_METHOD = 5 # [1, 2, 3]
-        self.NB_CLUSTER = 6 # [2 - 10]
+        self.NB_CLUSTER = 2 # [2 - 10]
 
         self.RADAR_RADIUS = 2 # [0 - 5]
-
         self.ABORT_RADIUS = 5 # [0 - 7]
-        
         self.OPPONENT_ABORT_RADIUS = 5 # [0 - 30]
+
+        self.TEST = []
 
     #### CLUSTERS MANAGEMENT
     def getClusterFactor(self, k):
@@ -122,23 +122,33 @@ class Engine:
         # In case of particular reaction
         if self.player.destination:
             CHECKS = {}
-        
+
             CHECKS['CHEESES_LOCATION'] = self.player.destination not in self.CURRENT_CHEESES_LOCATION
-            CHECKS['PLAYER_DESTINATION'] = self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= self.ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination]
             CHECKS['CHEESES_NB'] = self.CURRENT_CHEESES_NB in [1, 2]
-            CHECKS['OPPONENT_DESTINATION'] = (self.player.destination == self.opponent.destination) and (self.maze.distanceMetagraph[self.opponent.location][self.opponent.destination] <= OPPONENT_ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination])
-            
-            print(CHECKS)
-            
+
+            if not CHECKS['CHEESES_LOCATION']:
+                CHECKS['PLAYER_DESTINATION'] = self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= self.ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination]
+                CHECKS['OPPONENT_DESTINATION'] = (self.player.destination == self.opponent.destination) and (self.maze.distanceMetagraph[self.opponent.location][self.opponent.destination] <= self.OPPONENT_ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination])
+
             CHECKS_RESULT = False
             for k in CHECKS:
                 CHECKS_RESULT = CHECKS_RESULT or CHECKS[k]
         
             if CHECKS_RESULT:
-                self.player.setPath(None) # On reset le path
-                if (CHECKS['PLAYER_DESTINATION'] or CHECKS['OPPONENT_DESTINATION']) and (not CHECKS['CHEESES_NB']):
-                    self.CURRENT_CHEESES_LOCATION.remove(self.player.destination)
-            
+                if (CHECKS['CHEESES_LOCATION'] or CHECKS['PLAYER_DESTINATION'] or CHECKS['OPPONENT_DESTINATION']) and (not CHECKS['CHEESES_NB']):
+                    # On switch sur le fromage suivant si c'est rentable
+                    erase = True
+                    for p in self.player.path[1::]:
+                        new_dest = p[-1]
+                        if (new_dest in self.CURRENT_CHEESES_LOCATION) and (self.maze.distanceMetagraph[self.player.location][new_dest] < self.maze.distanceMetagraph[self.opponent.location][new_dest]):
+                            self.player.setPath([self.maze.pathMetagraph[self.player.location][new_dest]] + self.player.path[2::])
+                            erase = False
+                            break
+
+                    if erase:
+                        self.player.setPath(None)
+                else:
+                    self.player.setPath(None)  # On reset le path
 
         # If we need calculate a path
         if (not self.player.path) or \

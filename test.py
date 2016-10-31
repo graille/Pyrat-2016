@@ -465,53 +465,55 @@ if __name__ == "__main__":
 
     print("Cheeses : " + repr(cheeses))
     preprocessing(mazeMap, w, h, player_origin, opponent_origin, cheeses, 3)
-    turn(mazeMap, w, h, current_player, current_opponent, 0, 0, cheeses.copy(), 0.1)
+
+
+
     #
-    # while cheeses:
-    #     print("TOUR " + str(nb_turn))
+while cheeses:
+    print("TOUR " + str(nb_turn))
     #
-    #     if player_wait == 0:
-    #         way = turn(mazeMap, w, h, current_player, current_opponent, 0, 0, cheeses.copy(), 0.1)
-    #         new_player = engine.player.path[0][0]
+    if player_wait == 0:
+        way = turn(mazeMap, w, h, current_player, current_opponent, 0, 0, cheeses.copy(), 0.1)
+        new_player = engine.player.path[0][0]
     #
-    #         player_wait = engine.maze.getDistance(current_player, new_player) - 1
-    #         if player_wait > 0:
-    #             print("PLAYER WAIT")
-    #         player_path.append(way)
-    #     else:
-    #         player_wait -= 1
+        player_wait = engine.maze.getDistance(current_player, new_player) - 1
+        if player_wait > 0:
+            print("PLAYER WAIT")
+        player_path.append(way)
+    else:
+        player_wait -= 1
     #
-    #     if player_wait == 0:
-    #         current_player = new_player
+    if player_wait == 0:
+        current_player = new_player
     #
-    #     # Move opponent
+    # Move opponent
     #
-    #     if opponent_wait == 0:
-    #         new_opponent = engine.maze.getNearestNode(current_opponent, cheeses)[1][1]
+    if opponent_wait == 0:
+        new_opponent = engine.maze.getNearestNode(current_opponent, cheeses)[1][1]
     #
-    #         opponent_wait = engine.maze.getDistance(current_opponent, new_opponent) - 1
+        opponent_wait = engine.maze.getDistance(current_opponent, new_opponent) - 1
     #
-    #         opponent_path.append([current_opponent, new_opponent])
-    #     else:
-    #         opponent_wait -= 1
+        opponent_path.append([current_opponent, new_opponent])
+    else:
+        opponent_wait -= 1
     #
-    #     if opponent_wait == 0:
-    #         current_opponent = new_opponent
+    if opponent_wait == 0:
+        current_opponent = new_opponent
     #
     #
-    #     if current_player in cheeses and current_player == current_opponent:
-    #         cheeses.remove(current_player)
-    #         player_score += 0.5
-    #         opponent_score += 0.5
-    #     else:
-    #         if current_player in cheeses:
-    #             cheeses.remove(current_player)
-    #             player_score += 1
+    if current_player in cheeses and current_player == current_opponent:
+        cheeses.remove(current_player)
+        player_score += 0.5
+        opponent_score += 0.5
+    else:
+        if current_player in cheeses:
+            cheeses.remove(current_player)
+            player_score += 1
     #
-    #         if current_opponent in cheeses:
-    #             cheeses.remove(current_opponent)
-    #             opponent_score += 1
+        if current_opponent in cheeses:
+            cheeses.remove(current_opponent)
+            opponent_score += 1
     #
-    #     nb_turn += 1
-    # print([player_score, opponent_score])
+    nb_turn += 1
+print([player_score, opponent_score])
 
