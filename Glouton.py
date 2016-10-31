@@ -338,7 +338,7 @@ class Maze:
         n_list = [dij.getResult(n) for n in nodes]
         n_list.sort()
         
-        print(n_list)
+        #print(n_list)
 
         return n_list[0] if len(n_list) > 0 else (0, [])
 

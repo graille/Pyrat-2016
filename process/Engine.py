@@ -57,7 +57,9 @@ class Engine:
 
         self.RADAR_RADIUS = 2 # [0 - 5]
 
-        self.ABORT_RADIUS = 2 # [0 - 7]
+        self.ABORT_RADIUS = 5 # [0 - 7]
+        
+        self.OPPONENT_ABORT_RADIUS = 5 # [0 - 30]
 
     #### CLUSTERS MANAGEMENT
     def getClusterFactor(self, k):
@@ -118,11 +120,21 @@ class Engine:
         print("## Metagraph addition executed in " + str(time.clock() - t))
 
         # In case of particular reaction
-        if self.player.destination and \
-                (self.player.destination not in self.CURRENT_CHEESES_LOCATION or \
-                (self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= self.ABORT_RADIUS and self.maze.distanceMetagraph[self.player.location][self.player.destination] > self.ABORT_RADIUS) or \
-                self.CURRENT_CHEESES_NB in [1, 2]):  # Si l'adversaire a déja manger notre fromage ou qu'il se trouve dans un rayon de 2 cases de celui-ci
+        CHECKS = {}
+        CHECKS['CHEESES_LOCATION'] = self.player.destination not in self.CURRENT_CHEESES_LOCATION
+        CHECKS['PLAYER_DESTINATION'] = self.maze.distanceMetagraph[self.opponent.location][self.player.destination] <= self.ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination]
+        CHECKS['CHEESES_NB'] = self.CURRENT_CHEESES_NB in [1, 2]
+        CHECKS['OPPONENT_DESTINATION'] = (self.player.destination == self.opponent.destination) and (self.maze.distanceMetagraph[self.opponent.location][self.opponent.destination] <= OPPONENT_ABORT_RADIUS < self.maze.distanceMetagraph[self.player.location][self.player.destination])
+        
+        CHECKS_RESULT = True
+        for k in CHECKS:
+            CHECKS_RESULT = CHECKS_RESULT or CHECKS[k]
+        
+        if self.player.destination and CHECKS_RESULT:
             self.player.setPath(None) # On reset le path
+            if (CHECKS['PLAYER_DESTINATION'] or CHECKS['OPPONENT_DESTINATION']) and (not CHECKS['CHEESES_NB']):
+                self.CURRENT_CHEESES_LOCATION.remove(self.player.destination)
+            
 
         # If we need calculate a path
         if (not self.player.path) or \
