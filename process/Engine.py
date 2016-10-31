@@ -42,6 +42,8 @@ class Engine:
 
         self.clusterDistance = {}
 
+        self.clusterZeta = {}
+
         self.factors = {}
 
         # MODES
@@ -55,11 +57,11 @@ class Engine:
         self.RENTABILITY_METHOD = 1 # [1, 2]
         self.NB_CLUSTER = 6 # [2 - 10]
 
-        self.RADAR = True # [True, False]
         self.RADAR_RADIUS = 2 # [0 - 5]
 
         self.ABORT_RADIUS = 2 # [0 - 7]
 
+    #### CLUSTERS MANAGEMENT
     def getClusterFactor(self, k):
         if self.FACTOR_METHOD == 1:
             r, nb = 0, 0
@@ -81,10 +83,23 @@ class Engine:
             else:
                 return 0
 
-
     def getClusterDistance(self, i, j):
         return self.maze.distanceMetagraph[self.clusterApproxMiddle[i]][self.clusterApproxMiddle[j]]
 
+    def getClusterZeta(self, k):
+        r = 0
+        for i in self.cluster[k]:
+            r += self.maze.distanceMetagraph[self.clusterApproxMiddle[k]][i]
+
+        return r / len(self.cluster[k])
+
+    def getClusterCoordinate(self, i):
+        x1, y1 = self.clusterMiddle[i]
+        x1, y1 = round(x1), round(y1)
+
+        return (x1, y1)
+
+    #### ACTIONS MANAGEMENT
     def turn(self):
         t = time.clock()
 
@@ -222,7 +237,7 @@ class Engine:
                 self.player.setPath(self.maze.convertMetaPathToRealPaths(p))
 
         # Radar
-        if self.RADAR:
+        if self.RADAR_RADIUS > 0:
             r_d, r_n = np.inf, None
             for n in self.CURRENT_CHEESES_LOCATION:
                 # Check if we can have it
@@ -267,13 +282,6 @@ class Engine:
             print("Cheeses : " + repr(self.CURRENT_CHEESES_LOCATION))
             exit()
 
-    def getClusterCoordinate(self, i):
-        x1, y1 = self.clusterMiddle[i]
-        x1, y1 = round(x1), round(y1)
-
-        return (x1, y1)
-
-
     def preprocessing(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
         b_t = time.clock()
         # Create players
@@ -297,6 +305,8 @@ class Engine:
         # ITERATION :
         result = alg.process(None, 100)
 
+        ####################################### CLUSTERS GENERATION ###################################################
+
         # Checks clusters
         tot_cheeses = 0
         for i in range(nb_cluster):
@@ -304,14 +314,18 @@ class Engine:
             self.clusterMiddle[i] = result[0][i]
             self.clusterApproxMiddle[i] = (round(result[0][i][0]), round(result[0][i][1]))
 
+            # Calcul de l'écart type
+            self.maze.addNodeToMetagraph(self.clusterApproxMiddle[i], piecesOfCheese)
+            self.clusterZeta[i] = self.getClusterZeta(i)
+
             tot_cheeses += len(result[1][i])
+
+        print(self.clusterZeta)
 
         # Add approxs middles to metagraph
         middle_list = [self.clusterApproxMiddle[j] for j in self.cluster]
         for i in self.cluster:
             self.maze.addNodeToMetagraph(self.clusterApproxMiddle[i], middle_list)
-
-        print("## Clusters : " + repr(alg.k) + " clusters have been generated with " + str(tot_cheeses) + " cheeses")
 
         # Update clusters distance
         for i in self.cluster:
@@ -320,10 +334,11 @@ class Engine:
                 self.clusterDistance[i][j] = self.getClusterDistance(i, j)
 
         # Check the total number of cheeses
-        if not (tot_cheeses == self.TOTAL_CHEESES):
+        if tot_cheeses != self.TOTAL_CHEESES:
             print("# All cheeses has not been put in a cluster !!")
             pass
 
+        print("## Clusters : " + repr(alg.k) + " clusters have been generated with " + str(tot_cheeses) + " cheeses")
         print("# Pre-execution executed in " + repr(time.clock() - b_t) + " seconds")
 
     def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
@@ -357,7 +372,7 @@ class Engine:
 
         print("# Update executed in " + repr(time.clock() - b_t) + " seconds")
 
-    # Factors management
+    #### MIS
     def calculateFactors(self, nodes):
         try:
             # Calculate factors

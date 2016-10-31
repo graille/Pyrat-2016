@@ -56,3 +56,4 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
     print(" ")
 
     return action
+
