@@ -30,12 +30,12 @@ PLAYER_1_FILENAME = "./in/Pyrat-2016/stats.py"
 PLAYER_2_FILENAME = "./in/Pyrat-2016/Glouton.py"
 
 configs = [repr(NB_CLUSTER) + ';' + repr(FACTOR_METHOD) + ';' + repr(RENTABILITY_METHOD) + ';' + repr(RADAR_RADIUS) + ';' + repr(ABORT_RADIUS) + ';' + repr(OPPONENT_ABORT_RADIUS) \
-           for NB_CLUSTER in [5, 7, 9, 11] \
+           for NB_CLUSTER in [6] \
            for FACTOR_METHOD in [1] \
            for RENTABILITY_METHOD in [1, 2, 3] \
-           for RADAR_RADIUS in [0, 2] \
-           for ABORT_RADIUS in [0, 5] \
-           for OPPONENT_ABORT_RADIUS in [0, 5, 10]]
+           for RADAR_RADIUS in [2] \
+           for ABORT_RADIUS in [3] \
+           for OPPONENT_ABORT_RADIUS in [5]]
 
 NB_ITERATION = 20
 TOTAL_ITERATION = len(configs) * NB_ITERATION
@@ -49,7 +49,9 @@ num_config = 0
 
 with open(OUTPUT_FILE, "a") as f:
     f.write("Numero de configuration;Nombre de cluster;Methode facteur;Methode de rentabilité;Rayon du radar;Rayon d'abandon;Rayon d'abandon opposant;Nombre d'itération;Moyenne Total process;Moyenne par tour;Maximum total;Maximum tour;Minimum total;Minimum tour;Moyenne score joueur;Moyenne score opposant;Maximum score joueur;Maximum score opposant;Minimum score joueur;Minimum score opposant;Victoires joueur;Victoires opposant;Egalités")
-
+    f.write('\n\r')
+    f.close()
+    
 for c in configs:
     with open(OUTPUT_FILE, "a") as f:
         f.write(repr(num_config) + ';' + c)
