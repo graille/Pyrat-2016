@@ -47,7 +47,7 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
         engine.ABORT_RADIUS = int(elt[5])
         engine.OPPONENT_ABORT_RADIUS = int(elt[6])
 
-        print("NB_CLUSTER : " + repr(engine.NB_CLUSTER)
+        print("NB_CLUSTER : " + repr(engine.NB_CLUSTER))
         print("RENTABILITY_METHOD : " + repr(engine.RENTABILITY_METHOD))
 
         file.close()
@@ -78,11 +78,7 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
         return action
     except Exception as e:    
         with open(ERRORS_FILE, "a") as file:
-            file.write("I/O error({0}): {1}".format(e.errno, e.strerror))
-            file.write('\n\r')
-            file.write('\n\r')
-            
-            file.write(repr(mazemap))
+            file.write(repr(mazeMap))
             file.write('\n\r')
             file.write(repr(engine.INITAL_CHEESES))
             file.write('\n\r')
@@ -103,6 +99,11 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
             file.write(repr(engine.opponent.previousNodes))
             file.write('\n\r')
             file.write(repr(engine.opponent.destination))
+
+            file.write('\n\r')
+            file.write('\n\r')
+
+            file.write("I/O error({0}): {1}".format(e.errno, e.strerror))
             
             file.close()
         exit()
