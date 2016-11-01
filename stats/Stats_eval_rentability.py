@@ -3,8 +3,9 @@
 
 import sys
 import os
+import time
 
-from stats.LaunchersLibrary import *
+from LaunchersLibrary import *
 
 # Maze configuration
 MAZE_WIDTH = 25
@@ -25,8 +26,8 @@ OUTPUT_DIRECTORY = "./out/previousGame/"
 OUTPUT_FILE = "./out/results.csv"
 
 # Configs
-PLAYER_1_FILENAME = "./in/Pyrat-2016/stat.py"
-PLAYER_2_FILENAME = "./in/Glouton.py"
+PLAYER_1_FILENAME = "./in/Pyrat-2016/stats.py"
+PLAYER_2_FILENAME = "./in/Pyrat-2016/Glouton.py"
 
 configs = [repr(NB_CLUSTER) + ';' + repr(FACTOR_METHOD) + ';' + repr(RENTABILITY_METHOD) + ';' + repr(RADAR_RADIUS) + ';' + repr(ABORT_RADIUS) + ';' + repr(OPPONENT_ABORT_RADIUS) \
            for NB_CLUSTER in [6] \
@@ -36,7 +37,7 @@ configs = [repr(NB_CLUSTER) + ';' + repr(FACTOR_METHOD) + ';' + repr(RENTABILITY
            for ABORT_RADIUS in [4] \
            for OPPONENT_ABORT_RADIUS in [10]]
 
-NB_ITERATION = 50
+NB_ITERATION = 20
 TOTAL_ITERATION = len(configs) * NB_ITERATION
 
 print("Nombre de tests : " + str(TOTAL_ITERATION))
@@ -45,8 +46,9 @@ print("")
 
 num_config = 0
 for c in configs:
-    with open(OUTPUT_FILE, "a") as file:
-        file.write(repr(num_config) + ';' + c)
+    with open(OUTPUT_FILE, "a") as f:
+        f.write(repr(num_config) + ';' + c)
+        f.close()
 
     NB_ERROR = 0
 
@@ -65,18 +67,18 @@ for c in configs:
         result = startRandomGame(MAZE_WIDTH, MAZE_HEIGHT, MAZE_DENSITIES, MUD_PROBABILITY, MAZE_SYMMETRIC, NB_PIECES_OF_CHEESE, PREPROCESSING_TIME, TURN_TIME, GAME_MODE, OUTPUT_DIRECTORY, TIMEOUT, PLAYER_1_FILENAME, PLAYER_2_FILENAME)
 
         PLAYER_RESULTS = result['player1']
-        OPPONENT_RESULT = result['player2']
+        OPPONENT_RESULTS = result['player2']
 
         PLAYER_SCORES.append(PLAYER_RESULTS['score'])
-        OPPONENT_SCORES.append(PLAYER_RESULTS['score'])
+        OPPONENT_SCORES.append(OPPONENT_RESULTS['score'])
 
         PLAYER_PREPROCESSING_TIME.append(PLAYER_RESULTS['totalComputationTime'])
         PLAYER_TURN_TIME.append(PLAYER_RESULTS['meanComputationTime'])
         PLAYER_MISSED.append(PLAYER_RESULTS['nbTimingsMissed'])
 
-        if PLAYER_RESULTS['score'] == OPPONENT_RESULT['score']:
+        if PLAYER_RESULTS['score'] == OPPONENT_RESULTS['score']:
             EQUALITIES += 1
-        elif PLAYER_RESULTS['score'] > OPPONENT_RESULT['score']:
+        elif PLAYER_RESULTS['score'] > OPPONENT_RESULTS['score']:
             PLAYER_VICTORIES += 1
         else:
             OPPONENT_VICTORIES +=1
@@ -105,7 +107,8 @@ for c in configs:
              + repr(min(PLAYER_SCORES)) + ';' \
              + repr(min(OPPONENT_SCORES)) + ';' \
              + repr(PLAYER_VICTORIES) + ';' \
-             + repr(OPPONENT_VICTORIES)
-
-    with open(OUTPUT_FILE, "r") as file:
+             + repr(OPPONENT_VICTORIES) + ';' \
+             + repr(EQUALITIES)
+    num_config += 1
+    with open(OUTPUT_FILE, "a") as file:
         file.write(';' + RESULT + '\n\r')

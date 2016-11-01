@@ -5,7 +5,7 @@ import os
 import sys
 
 # Set the syspath
-f_name = "main.py"
+f_name = "stats.py"
 a_path = str(os.path.abspath(__file__))
 new_sys_entry = a_path[0:len(a_path) - len(f_name)]
 
@@ -21,6 +21,7 @@ engine = None
 nb_turn = 0
 global_time = time.clock()
 OUTPUT_FILE = "./out/results.csv"
+ERRORS_FILE = "./out/Errors/EXPT-" + str(time.clock()) + ".txt"
 
 def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed):
     global engine
@@ -34,9 +35,14 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     # Initialize the game
     engine = Engine(mazeMap, mazeWidth, mazeHeight)
 
-    with open(OUTPUT_FILE, "a") as file:
-        lines = file.read()
-        engine.RENTABILITY_METHOD = int(lines[-1])
+    with open(OUTPUT_FILE, "r") as file:
+        lines = file.readlines()
+        elt = lines[-1].split(';')
+        print(elt)
+        engine.RENTABILITY_METHOD = int(elt[2])
+        
+        print("Rent method : " + str(engine.RENTABILITY_METHOD))
+        file.close()
 
     # Update with preprocessing argument
     engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100)
@@ -45,20 +51,52 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     print("")
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
-    global engine
-    global nb_turn
-    global global_time
-    
-    t = time.clock()
-    print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
+    try:
+        global engine
+        global nb_turn
+        global global_time
+        
+        t = time.clock()
+        print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
 
-    # Update
-    engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
-    action = engine.turn()
+        # Update
+        engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
+        action = engine.turn()
 
-    nb_turn += 1
-    print('[' + repr(action) + '] in ' + repr(time.clock() - t))
-    print(" ")
+        nb_turn += 1
+        print('[' + repr(action) + '] in ' + repr(time.clock() - t))
+        print(" ")
 
-    return action
+        return action
+    except Exception as e:    
+        with open(ERRORS_FILE, "a") as file:
+            file.write("I/O error({0}): {1}".format(e.errno, e.strerror))
+            file.write('\n\r')
+            file.write('\n\r')
+            
+            file.write(repr(mazemap))
+            file.write('\n\r')
+            file.write(repr(engine.INITAL_CHEESES))
+            file.write('\n\r')
+            file.write(repr(piecesOfCheese))
+            file.write('\n\r')
+            
+            file.write(repr(engine.cluster))
+            file.write('\n\r')
+            file.write(repr(engine.player.path))
+            file.write('\n\r')
+            file.write(repr(engine.player.previousNodes))
+            file.write('\n\r')
+            file.write(repr(engine.player.destination))
+            
+            file.write('\n\r')
+            file.write(repr(engine.opponent.path))
+            file.write('\n\r')
+            file.write(repr(engine.opponent.previousNodes))
+            file.write('\n\r')
+            file.write(repr(engine.opponent.destination))
+            
+            file.close()
+        exit()
+        
 

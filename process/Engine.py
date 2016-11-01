@@ -53,11 +53,11 @@ class Engine:
         # Parameters
         self.FACTOR_METHOD = 1 # [1,2]
         self.RENTABILITY_METHOD = 3 # [1, 2, 3]
-        self.NB_CLUSTER = 2 # [2 - 10]
+        self.NB_CLUSTER = 6 # [2 - 10]
 
-        self.RADAR_RADIUS = 2 # [0 - 5]
+        self.RADAR_RADIUS = 3 # [0 - 5]
         self.ABORT_RADIUS = 5 # [0 - 7]
-        self.OPPONENT_ABORT_RADIUS = 5 # [0 - 30]
+        self.OPPONENT_ABORT_RADIUS = 10 # [0 - 30]
 
         self.TEST = []
 
