@@ -346,7 +346,7 @@ class Engine:
 
         # Return path
         print("# Turn executed in " + repr(time.clock() - t) + " seconds")
-
+        
         try:
             return self.maze.getMove(current_node, next_node)
         except TypeError:

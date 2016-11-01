@@ -78,32 +78,38 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
         return action
     except Exception as e:    
         with open(ERRORS_FILE, "a") as file:
+            file.write(repr((engine.NB_CLUSTER,engine.FACTOR_METHOD, engine.RENTABILITY_METHOD, engine.RADAR_RADIUS, engine.ABORT_RADIUS, engine.OPPONENT_ABORT_RADIUS)))
+            file.write('\n\r')
             file.write(repr(mazeMap))
             file.write('\n\r')
-            file.write(repr(engine.INITAL_CHEESES))
+            file.write("Fromages initiaux : " + repr(engine.INITIAL_CHEESES))
             file.write('\n\r')
-            file.write(repr(piecesOfCheese))
+            file.write("Fromages actuels : " + repr(piecesOfCheese))
             file.write('\n\r')
             
-            file.write(repr(engine.cluster))
+            file.write("Clusters : " + repr(engine.cluster))
             file.write('\n\r')
-            file.write(repr(engine.player.path))
+            file.write("Player path : " + repr(engine.player.path))
             file.write('\n\r')
-            file.write(repr(engine.player.previousNodes))
+            file.write("Player previousNodes : " + repr(engine.player.previousNodes))
             file.write('\n\r')
-            file.write(repr(engine.player.destination))
+            file.write("Player destination : " + repr(engine.player.destination))
+            file.write('\n\r')
+            file.write("Player location : " + repr(engine.player.location)) 
             
             file.write('\n\r')
-            file.write(repr(engine.opponent.path))
+            file.write("Opponent path : " + repr(engine.opponent.path))
             file.write('\n\r')
-            file.write(repr(engine.opponent.previousNodes))
+            file.write("Opponent previousNodes : " + repr(engine.opponent.previousNodes))
             file.write('\n\r')
-            file.write(repr(engine.opponent.destination))
+            file.write("Opponent destination : " + repr(engine.opponent.destination))
+            file.write('\n\r')
+            file.write("Opponent location : " + repr(engine.opponent.location))
+            
+            file.write('\n\r')
+            file.write('\n\r')
 
-            file.write('\n\r')
-            file.write('\n\r')
-
-            file.write("I/O error({0}): {1}".format(e.errno, e.strerror))
+            file.write("I/O error({0}): {1} " + repr(e.args))
             
             file.close()
         exit()
