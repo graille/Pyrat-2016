@@ -3,7 +3,7 @@ import numpy as np
 
 
 class Fourmis:
-    def __init__(self, maze, fromLocation, locationList, pheromonesTime=100, antNumber=1000, pheromonesMax=1,
+    def __init__(self, maze, fromLocation, locationList, pheromonesTime=200, antNumber=1000, pheromonesMax=1,
                  pheromonesMin=0.01):
         """Prend la liste des cases a visiter"""
         self.maze = maze

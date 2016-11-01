@@ -12,7 +12,9 @@ import numpy as np
 
 from tkinter import *
 import tkinter.font as tkFont
-
+import time
+from subprocess import call
+import os
 
 class MazeViewer:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
@@ -68,6 +70,32 @@ class MazeViewer:
         # Generation
         self.generate()
 
+    def screenshotButton(self, row):
+        # Declaration des boutons de contôles de la couche layer
+        b = Button(self.window, text="Screen", width=10, command=self.takeScreenshot)
+
+        # On affiche
+        b.grid(column=1, row=row, columnspan=4)
+
+    def takeScreenshot(self, *args):
+        FILE_NAME = str(time.clock())
+        self.canvas.update()
+
+        # Generate dirs
+        if 'screenshots' not in os.listdir("./"):
+            call(['mkdir', 'screenshots'])
+        if 'png' not in os.listdir("./screenshots"):
+            call(['mkdir', './screenshots/png'])
+        if 'jpg' not in os.listdir("./screenshots"):
+            call(['mkdir', './screenshots/jpg'])
+
+        self.canvas.postscript(file=("./screenshots/" + FILE_NAME + ".ps"), colormode='color')
+        os.system("convert -density 200 ./screenshots/" + FILE_NAME + ".ps ./screenshots/jpg/" + FILE_NAME + ".jpg")
+        os.system("convert -density 200 ./screenshots/" + FILE_NAME + ".ps ./screenshots/png/" + FILE_NAME + ".png")
+        call(['rm', "./screenshots/" + FILE_NAME + ".ps"])
+
+        self.writeLog("Screenshot enregistré : " + FILE_NAME)
+
     def generate(self):
         font = tkFont.Font(family='Helvetica', size=6)
 
@@ -112,11 +140,23 @@ class MazeViewer:
         # Declaration des boutons de contôles de la couche layer
         b1 = Button(self.window, text="<< (Reculer)", width=10, command= lambda: self.showPreviousPath(path_id))
         b2 = Button(self.window, text=">> (Avancer)", width=10, command= lambda: self.showNextPath(path_id))
+        b3 = Button(self.window, text="Capturer", width=10, command=lambda: self.capturePath(path_id))
 
         # On affiche
         Label(self.window, text="Chemin n°" + repr(path_id)).grid(column=1, row=path_id, sticky=W)
         b1.grid(row=path_id, column=2)
         b2.grid(row=path_id, column=3)
+        b3.grid(row=path_id, column=4)
+
+    def capturePath(self, path_id):
+        while self.pathContainer[path_id]['current'] < (len(self.pathContainer[path_id]['path']) - 1):
+            self.takeScreenshot()
+            self.showNextPath(path_id)
+
+        self.takeScreenshot()
+
+        while self.pathContainer[path_id]['current'] > -1:
+            self.showPreviousPath(path_id)
 
     def showNextPath(self, path_id):
         if self.pathContainer[path_id]['current'] < (len(self.pathContainer[path_id]['path']) - 1):
@@ -303,10 +343,18 @@ class MazeViewer:
         # Bind
         self.window.bind_all('<Left>', self.downAll)
         self.window.bind_all('<Right>', self.upAll)
+        self.window.bind_all('<F1>', self.takeScreenshot)
 
         # Others
         rows = len(list(self.pathContainer.keys()))
-        self.pathTracer.grid(column = 1, row=rows, columnspan=3)
-        self.canvas.grid(row = 0, column = 0, rowspan=(rows+1))
+        self.screenshotButton(rows)
+
+
+
+        self.pathTracer.grid(column = 1, row=rows + 1, columnspan=4)
+        self.canvas.grid(row = 0, column = 0, rowspan=(rows+2))
 
         self.window.mainloop()
+
+    def close(self):
+        self.window.destroy()
