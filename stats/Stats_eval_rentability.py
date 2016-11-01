@@ -30,27 +30,30 @@ PLAYER_1_FILENAME = "./in/Pyrat-2016/stats.py"
 PLAYER_2_FILENAME = "./in/Pyrat-2016/Glouton.py"
 
 configs = [repr(NB_CLUSTER) + ';' + repr(FACTOR_METHOD) + ';' + repr(RENTABILITY_METHOD) + ';' + repr(RADAR_RADIUS) + ';' + repr(ABORT_RADIUS) + ';' + repr(OPPONENT_ABORT_RADIUS) \
-           for NB_CLUSTER in [6] \
+           for NB_CLUSTER in [5, 7, 9, 11] \
            for FACTOR_METHOD in [1] \
            for RENTABILITY_METHOD in [1, 2, 3] \
-           for RADAR_RADIUS in [2] \
-           for ABORT_RADIUS in [4] \
-           for OPPONENT_ABORT_RADIUS in [10]]
+           for RADAR_RADIUS in [0, 2] \
+           for ABORT_RADIUS in [0, 5] \
+           for OPPONENT_ABORT_RADIUS in [0, 5, 10]]
 
 NB_ITERATION = 20
 TOTAL_ITERATION = len(configs) * NB_ITERATION
+CURRENT_ITERATION = 0
 
 print("Nombre de tests : " + str(TOTAL_ITERATION))
 print("Temps estimé : " + str(TOTAL_ITERATION * 20 / 3600) + " heures")
 print("")
 
 num_config = 0
+
+with open(OUTPUT_FILE, "a") as f:
+    f.write("Numero de configuration;Nombre de cluster;Methode facteur;Methode de rentabilité;Rayon du radar;Rayon d'abandon;Rayon d'abandon opposant;Nombre d'itération;Moyenne Total process;Moyenne par tour;Maximum total;Maximum tour;Minimum total;Minimum tour;Moyenne score joueur;Moyenne score opposant;Maximum score joueur;Maximum score opposant;Minimum score joueur;Minimum score opposant;Victoires joueur;Victoires opposant;Egalités")
+
 for c in configs:
     with open(OUTPUT_FILE, "a") as f:
         f.write(repr(num_config) + ';' + c)
         f.close()
-
-    NB_ERROR = 0
 
     PLAYER_SCORES = []
     OPPONENT_SCORES = []
@@ -64,6 +67,7 @@ for c in configs:
     EQUALITIES = 0
 
     for k in range(NB_ITERATION):
+        print("Iteration " + str(CURRENT_ITERATION) + " : " + str(int(CURRENT_ITERATION * 100 * 100 / TOTAL_ITERATION) / 100.) + " %")
         result = startRandomGame(MAZE_WIDTH, MAZE_HEIGHT, MAZE_DENSITIES, MUD_PROBABILITY, MAZE_SYMMETRIC, NB_PIECES_OF_CHEESE, PREPROCESSING_TIME, TURN_TIME, GAME_MODE, OUTPUT_DIRECTORY, TIMEOUT, PLAYER_1_FILENAME, PLAYER_2_FILENAME)
 
         PLAYER_RESULTS = result['player1']
@@ -83,6 +87,8 @@ for c in configs:
         else:
             OPPONENT_VICTORIES +=1
 
+        CURRENT_ITERATION += 1
+
     if not PLAYER_SCORES:
         PLAYER_SCORES.append(-1)
     if not OPPONENT_SCORES:
@@ -93,7 +99,6 @@ for c in configs:
         PLAYER_TURN_TIME.append(-1)
 
     RESULT = repr(NB_ITERATION) + ';' \
-             + repr(NB_ERROR) + ';' \
              + repr(sum(PLAYER_PREPROCESSING_TIME) / len(PLAYER_PREPROCESSING_TIME)) + ';' \
              + repr((sum(PLAYER_TURN_TIME) / len(PLAYER_TURN_TIME))) + ';' \
              + repr(max(PLAYER_PREPROCESSING_TIME)) + ';' \
@@ -109,6 +114,8 @@ for c in configs:
              + repr(PLAYER_VICTORIES) + ';' \
              + repr(OPPONENT_VICTORIES) + ';' \
              + repr(EQUALITIES)
+
     num_config += 1
-    with open(OUTPUT_FILE, "a") as file:
-        file.write(';' + RESULT + '\n\r')
+
+    with open(OUTPUT_FILE, "a") as f:
+        f.write(';' + RESULT + '\n\r')

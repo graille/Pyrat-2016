@@ -39,9 +39,17 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
         lines = file.readlines()
         elt = lines[-1].split(';')
         print(elt)
-        engine.RENTABILITY_METHOD = int(elt[2])
-        
-        print("Rent method : " + str(engine.RENTABILITY_METHOD))
+
+        engine.NB_CLUSTER = int(elt[1])
+        engine.FACTOR_METHOD = int(elt[2])
+        engine.RENTABILITY_METHOD = int(elt[3])
+        engine.RADAR_RADIUS = int(elt[4])
+        engine.ABORT_RADIUS = int(elt[5])
+        engine.OPPONENT_ABORT_RADIUS = int(elt[6])
+
+        print("NB_CLUSTER : " + repr(engine.NB_CLUSTER)
+        print("RENTABILITY_METHOD : " + repr(engine.RENTABILITY_METHOD))
+
         file.close()
 
     # Update with preprocessing argument
