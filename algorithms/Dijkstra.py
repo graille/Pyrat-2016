@@ -5,31 +5,50 @@ Created on Fri Sep 16 18:07:45 2016
 @author: Thibault/Clément
 """
 
-import copy as cp
 import numpy as np
+import heapq
 
+
+class PriorityQueue(object):
+    def __init__(self, heap = []):
+        heapq.heapify(heap)
+        self.heap = heap
+
+    def insert(self, node, priority = 0):
+        heapq.heappush(self.heap, (priority, node))
+
+    def pop(self):
+        return heapq.heappop(self.heap)[1]
 
 class Dijkstra:
     def __init__(self, maze, origin = None, goal = None):
         self.graph = maze
-        self.setOrigin(origin) if origin else ()
-        self.setGoal(goal) if goal else ()
+        self.setOrigin(origin)
+        self.setGoal(goal)
 
     def setOrigin(self, n):
-        self.origin = n
+        if n:
+            self.origin = n
 
     def setGoal(self, n):
-        self.goal = n
+        if isinstance(n, list):
+            self.goal = n.copy()
+        else:
+            self.goal = n
 
     def clear(self):
         self.pathArray = {}
         self.dist = {}
+        self.Q = PriorityQueue()
+
+        self.dist[self.origin] = 0
 
         for node in self.graph.nodes:
-            self.pathArray[node] = None
+            if node != self.origin:
+                self.pathArray[node] = None
+                self.dist[node] = np.inf
 
-        for node in self.graph.nodes:
-            self.dist[node] = np.inf
+        self.Q.insert(self.origin, self.dist[self.origin])
 
     def process(self):
         self.algorithm()
@@ -37,50 +56,34 @@ class Dijkstra:
     def algorithm(self):
         if self.origin != self.goal:
             self.clear()
-            self.dist[self.origin] = 0
 
-            Q = cp.copy(self.graph.nodes)
-
-            while Q:
-                n1 = self.findMin(Q)
-                Q.remove(n1)
-
-                if self.goal and n1 == self.goal:
-                    break
-
-                for n2 in self.graph.getNeighbors(n1):
-                    self.majDistance(n1, n2)
+            while self.Q.heap:
+                u = self.Q.pop()
+                for v in self.graph.getNeighbors(u):
+                    alt = self.dist[u] + self.graph.getDistance(u, v)
+                    if alt < self.dist[v]:
+                        self.dist[v] = alt
+                        self.pathArray[v] = u
+                        self.Q.insert(v, alt)
         else:
             pass
 
-    def findMin(self, Q):
-        m = np.inf
-        s = None
-
-        for n in Q:
-            if self.dist[n] < m:
-                m = self.dist[n]
-                s = n
-
-        return s
-
-    def majDistance(self, n1, n2):
-        if self.dist[n2] > self.dist[n1] + self.graph.getDistance(n1, n2):
-            self.dist[n2] = self.dist[n1] + self.graph.getDistance(n1, n2)
-            self.pathArray[n2] = n1
-
     def reconstructPath(self, node):
-        total_path = ""
+        #litteral_path = ""
         total_distance = 0
         current = node
-
+        real_path = []
         while current != self.origin:
             new = self.pathArray[current]
-            total_path += self.graph.getMove(new, current)
+
+            #litteral_path += self.graph.getMove(new, current)
             total_distance += self.graph.getDistance(current, new)
+            real_path.append(current)
+
             current = new
 
-        return (total_distance, total_path[::-1])
+        real_path.append(current)
+        return (total_distance, real_path[::-1])
 
     def getResult(self, node = None):
         if self.goal != self.origin:
@@ -89,4 +92,4 @@ class Dijkstra:
             else:
                 return self.reconstructPath(node)
         else:
-            return (0, "")
+            return (0, [])

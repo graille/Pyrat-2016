@@ -1,72 +1,66 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import numpy as np
+import random as rd
+import time
+
 
 class TwoOPT:
-    def __init__(self, maze, origin = None, goals = None):
+    def __init__(self, maze, goals = None, allowedTime = 2):
         self.maze = maze
-        self.origin = origin if origin else ()
-        self.goals = goals if goals else ()
+        self.setGoals(goals) if goals else ()
 
-        self.NB_OF_NODES = len(goals) + 1 if goals else 0
         self.path = []
 
-        self.improveAlg = False
-
-    def setOrigin(self, origin):
-        self.origin = origin
+        self.allowedTime = allowedTime
 
     def setGoals(self, goals):
-        self.goals = goals
-        self.NB_OF_NODES = len(goals) + 1
+        self.goals = goals.copy()
+        self.NB_OF_NODES = len(self.goals)
+
+    def setAllowedTime(self, time):
+        self.allowedTime = time
 
     def calculateFirstPath(self):
         """
-        Create a naive path
+        Create a random path
         """
-        self.path = [self.origin]
-
-        # We start with a random
-        for n in self.goals:
-            if n not in self.path:
-                self.path.append(n)
-
-        #print("First path " + repr(self.getResult()))
+        rd.shuffle(self.goals)
+        self.path = self.goals
 
     def process(self):
         self.algorithm()
-
-    def setImprove(self, val):
-        self.improveAlg = val
 
     def algorithm(self):
         """
         Calculate a path with the 2-opt algorithm
         """
+        t = time.clock()
         self.calculateFirstPath()
         improve = True
-        while improve:
+        while improve and (self.allowedTime > (time.clock() - t)):
             improve = False
 
-            # Personnal improve
-            if self.NB_OF_NODES > 1 and self.improveAlg:
-                for i in range(self.NB_OF_NODES - 1):
-                    if self.getDistance(i, -1) < self.getDistance(i, i+1):
-                        self.path = self.path[:(i+1)] + (self.path[(i+1)::])[::-1]
-                        improve = True
-
-            for i in range(self.NB_OF_NODES): #range(self.NB_OF_NODES) optimize the loop, range(1, self.NB_OF_NODES - 1) optimize a way, but keep the last point at is place
+            for i in range(self.NB_OF_NODES):
                 for j in range(self.NB_OF_NODES):
-                    if j in [i - 1 % self.NB_OF_NODES, i, i + 1 % self.NB_OF_NODES]:
+                    if j in [(i - 1) % self.NB_OF_NODES, i, (i + 1) % self.NB_OF_NODES]:
                         continue
 
                     if self.getDistance(i, i + 1) + self.getDistance(j, j + 1) > self.getDistance(i, j) + self.getDistance(i + 1, j + 1):
                         self.exchange(i, j)
-                        #print("Exchange " + str(i) + "|" + str(j) + ". Comparaison distance : (before) " + repr(self.getDistance(i, j) + self.getDistance(i + 1, j + 1)) + " | (after) " + repr(self.getDistance(i, i + 1) + self.getDistance(j, j + 1)))
-                        #print("Current path " + repr(self.getResult()))
                         improve = True
 
-    def getResult(self):
+    def shiftArray(self, a):
+        a.append(a[0])
+        a = a[1::]
+
+        return a
+
+    def getResult(self, first_node = None):
+        if first_node and first_node in self.path:
+            while self.path[0] != first_node:
+                self.path = self.shiftArray(self.path)
+
         return (self.getResultDistance(), self.getResultPath())
 
     def getResultPath(self):
@@ -75,7 +69,6 @@ class TwoOPT:
     def getResultDistance(self):
         r = 0
         for k in range(self.NB_OF_NODES - 1):
-            #print("Distance " + str(k) + " " + repr(self.path[k]) + " to " + str(k+1) + " " + repr(self.path[k+1]) + " = " + str(self.maze.distanceMetagraph[self.path[k]][self.path[k + 1]]))
             r += self.maze.distanceMetagraph[self.path[k]][self.path[k + 1]]
 
         return r # Get the longer of the path, without loop
@@ -89,9 +82,8 @@ class TwoOPT:
         :param i: arrete partant de i
         :param j: arrete partant de j
         """
-        #print(str(int(round(abs(i - j)/2))) +  repr((i, j)))
         if i > j:
             i, j = j, i
+
         for k in range(int(round(abs(i - j)/2))):
-            #print(((i + k + 1) % self.NB_OF_NODES, j - k))
             self.path[(i + k + 1) % self.NB_OF_NODES], self.path[j - k] = self.path[j - k], self.path[(i + 1 + k) % self.NB_OF_NODES]

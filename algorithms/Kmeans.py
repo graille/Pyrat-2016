@@ -1,22 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import random
+import time
 import numpy as np
-from algorithms.Astar import *
+
 
 class K_Means:
     def __init__(self, maze, k = 4, nodes = None):
         self.maze = maze
-        self.S = {}
-        self.m = {}
+        self.S = {} # Contain the elements of each cluster
+        self.m = {} # Contain the middle of each clusters
 
         self.k = k
-        self.nodes = nodes
-        self.astar = Astar(maze)
-
-        self.distanceGraph = {}
-
         if nodes:
             self.setNodes(nodes)
 
@@ -27,21 +22,22 @@ class K_Means:
         self.nodes = nodes
         self.NB_NODES = len(nodes)
 
-    def getDistance(self, i, j):
-        p = random.randint(0,100)
-        if p < 0: # 80% de chance de faire Astar
-            x1, y1 = round(i[0]), round(i[1])
-            x2, y2 = round(j[0]), round(j[1])
+    def getDistance(self, moy, n):
+        t = time.clock()
+        x1, y1 = round(moy[0]), round(moy[1])
 
-            self.astar.setOrigin((x1, y1))
-            self.astar.setGoal((x2, y2))
-            self.astar.process()
-            d = self.astar.getResult()[0]
-            return d
-        else:
-            x1, y1 = i
-            x2, y2 = j
-            return (x1 - x2) ** 2 + (y1 - y2) ** 2
+        dx1, dy1 = x1 - moy[0], y1 - moy[1]
+
+        # Add moy to metagraph
+        self.maze.addNodeToMetagraph((x1, y1), self.nodes)
+
+        d = self.maze.distanceMetagraph[(x1, y1)][n]
+
+        return d + np.sqrt(dx1**2 + dy1**2)
+
+        #x1, y1 = i
+        #x2, y2 = j
+        #return (x1 - x2) ** 2 + (y1 - y2) ** 2
 
     def sommeTuplesInList(self, L):
         x, y = 0, 0
@@ -51,37 +47,47 @@ class K_Means:
 
         return (x, y)
 
-    def process(self, iteration = 100):
-        if self.NB_NODES > self.k:
-            #random.shuffle(self.nodes)
-            t = 0
+    def checkLoop(self, allowed_time, iterations, t, nb):
+        if allowed_time:
+            return allowed_time > (time.clock() - t)
+        elif iterations:
+            return iterations > nb
+        else:
+            raise Exception("Invalid parameters")
+
+    def process(self, allowed_time = None, iterations = None):
+        if self.NB_NODES >= self.k:
+            t, nb = time.clock(), 0
 
             # Initialise M
-            self.m[t] = {}
+            self.m[nb] = {}
             for i in range(self.k):
-                self.m[t][i] = self.nodes[i]
+                self.m[nb][i] = self.nodes[i]
 
-            while t < iteration:
-                self.S[t] = {}
-                self.m[t + 1] = {}
+            while self.checkLoop(allowed_time, iterations, t, nb):
+                self.S[nb] = {}
+                self.m[nb + 1] = {}
                 for i in range(self.k):
-                    self.S[t][i] = []
+                    self.S[nb][i] = []
 
                     for n in self.nodes:
-                        d = self.getDistance(n, self.m[t][i])
+                        d = self.getDistance(self.m[nb][i], n)
                         c = True
 
                         for j in range(self.k):
-                            if d > self.getDistance(n, self.m[t][j]):
+                            if d > self.getDistance(self.m[nb][j], n):
                                 c = False
 
                         if c:
-                            self.S[t][i].append(n)
+                            self.S[nb][i].append(n)
 
-                    x, y = self.sommeTuplesInList(self.S[t][i])
+                    x, y = self.sommeTuplesInList(self.S[nb][i])
 
-                    self.m[t + 1][i] = (x / len(self.S[t][i]), y / len(self.S[t][i]))
+                    if len(self.S[nb][i]) > 0:
+                        self.m[nb + 1][i] = (x / len(self.S[nb][i]), y / len(self.S[nb][i]))
+                    else:
+                        self.m[nb + 1][i] = self.m[nb][i]
+                nb += 1
 
-                t += 1
-
-            return (self.m[t - 1], self.S[t - 1])
+            print("## K-means executed in " + repr(time.clock() - t) + " seconds and " + repr(nb) + " operations")
+            return (self.m[nb - 1], self.S[nb - 1])

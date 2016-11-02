@@ -8,7 +8,6 @@ import numpy as np
 
 # Import algorithms
 from algorithms.Astar import *
-from algorithms.FloydWarshall import *
 from algorithms.Dijkstra import *
 
 class Maze:
@@ -17,7 +16,7 @@ class Maze:
         self.mazeWidth = mazeWidth
         self.mazeHeight = mazeHeight
 
-        self.NB_CASES = self.mazeWidth * self.mazeHeight
+        self.NB_NODES = self.mazeWidth * self.mazeHeight
         self.nodes = list(self.mazeMap.keys())
 
         # Init matrixMap
@@ -85,8 +84,8 @@ class Maze:
         :return: bool
         """
         if origin != goal:
-            i1,j1 = origin
-            i2,j2 = goal
+            i1, j1 = origin
+            i2, j2 = goal
 
             if i1 - i2 == -1:
                 return 'D'
@@ -111,31 +110,29 @@ class Maze:
 
         return path
 
+    def convertToRealPath(self, origin, pathNodes):
+        L = [origin]
+
+        x, y = origin
+        for elt in pathNodes:
+            if elt == 'L':
+                y -= 1
+            if elt == 'U':
+                x -= 1
+            if elt == 'D':
+                x += 1
+            if elt == 'R':
+                y += 1
+            L.append((x, y))
+
+        return L
+
     def concatPaths(self, paths):
         r = ""
         for path in paths:
             r += path
 
         return r
-    
-    
-    # Metagraph
-    
-    def fastestPathToNode(self, origin, goal):
-        """
-        Find the fastest path from origin to goal
-        :param origin:
-        :param goal:
-        :return:
-        """
-        al = Astar(self)
-
-        al.setOrigin(origin)
-        al.setGoal(goal)
-
-        al.process()
-
-        return al.getResult()
 
     def createMetaGraph(self, cheeses_list):
         """
@@ -143,20 +140,24 @@ class Maze:
         :param nodes_list: List of currents cheeses
         :return:
         """
+        cheeses_list = cheeses_list.copy()
         dij = Dijkstra(self)
-        for n1 in cheeses_list:
-            self.distanceMetagraph[n1] = {}
-            self.pathMetagraph[n1] = {}
 
+        while cheeses_list:
+            n1 = cheeses_list[0]
             # Calculate path and distance with Dijkstra
             dij.setOrigin(n1)
-            dij.setGoal(None)
+            dij.setGoal(cheeses_list)
             dij.process()
 
             for n2 in cheeses_list:
-                result = dij.getResult(n2)
-                self.distanceMetagraph[n1][n2] = result[0]
-                self.pathMetagraph[n1][n2] = result[1]
+                d, p = dij.getResult(n2)
+                self.coupleNodesInMetagraph(n1, n2, d, p)
+
+            cheeses_list.remove(n1) # On supprime le node en cours, pour accelerer le programme
+            cheeses_list.remove(self.getOpposite(n1)) if self.getOpposite(n1) != n1 else () # Par symetrie, on supprime l'opposé
+
+        #print(repr(len(self.distanceMetagraph[(12, 13)]))+ repr(self.distanceMetagraph[(12, 13)]))
 
     def addNodeToMetagraph(self, node, nodes_list):
         """
@@ -165,21 +166,104 @@ class Maze:
         :param nodes_list:
         :return:
         """
-        dij = Dijkstra(self)
 
-        dij.setOrigin(node)
+        # Create the list of unChecked nodes
+        checked_list = []
+
+        if node in self.distanceMetagraph:
+            for n in nodes_list:
+                if n not in self.distanceMetagraph[node]:
+                    checked_list.append(n)
+        else:
+            checked_list = nodes_list
+
+        # Environ 10^-6 sec pour arriver là
+        if checked_list:
+            dij = Dijkstra(self, node, checked_list)
+            dij.process()
+            # Environ 0.02 sec pour un 25x25
+
+            for n in checked_list:
+                d, p = dij.getResult(n)
+                self.coupleNodesInMetagraph(node, n, d, p)
+
+    def coupleNodesInMetagraph(self, n1, n2, d, p, recurse = True):
+        """
+        :param d: distance from n1 to n2
+        :param p: path from n1 to n2
+        """
+
+        if n1 not in self.distanceMetagraph:
+            self.distanceMetagraph[n1] = {}
+            self.pathMetagraph[n1] = {}
+
+        self.distanceMetagraph[n1][n2] = d
+        self.pathMetagraph[n1][n2] = p
+
+        if n2 not in self.distanceMetagraph:
+            self.distanceMetagraph[n2] = {}
+            self.pathMetagraph[n2] = {}
+
+        self.distanceMetagraph[n2][n1] = d
+        self.pathMetagraph[n2][n1] = p[::-1]  # Path from n2 to n1 is the opposite of the path from n1 to n2
+
+        # Add opposite
+        if recurse:
+            self.coupleNodesInMetagraph(self.getOpposite(n1), self.getOpposite(n2), d, list(map(self.getOpposite, p)), False)
+
+    def getOpposite(self, n):
+        x, y = n
+        return (self.mazeHeight - x - 1, self.mazeWidth - y - 1)
+
+    # Algoritms application
+    def getFastestPath(self, origin, goal):
+        try:
+            return (self.distanceMetagraph[origin][goal], self.pathMetagraph[origin][goal])
+        except KeyError:
+            print("## Need to calculate the fastest path from " + repr(origin) + " to " + repr(goal))
+
+            # Calculate path and distance with Astar
+            dij = Astar(self, origin, goal)
+            dij.process()
+
+            d, p = dij.getResult()
+
+            # Addto metagraph for a next time
+            self.coupleNodesInMetagraph(origin, goal, d, p)
+
+            return (d, p)
+
+    def getNearestNode(self, origin, nodes):
+        dij = Dijkstra(self)
+        dij.setOrigin(origin)
         dij.setGoal(None)
+
         dij.process()
 
-        try:
-            keys = self.distanceMetagraph[node].keys()
-        except KeyError:
-            keys = []
-            self.distanceMetagraph[node] = {}
-            self.pathMetagraph[node] = {}
+        n_list = [dij.getResult(n) for n in nodes]
+        n_list.sort()
 
-        for n in nodes_list:
-            if n not in keys:  # If we have never calculate the distance
-                result = dij.getResult(n)
-                self.distanceMetagraph[node][n], self.distanceMetagraph[n][node] = result[0], result[0]
-                self.pathMetagraph[node][n], self.pathMetagraph[n][node] = result[1], result[1]
+        return n_list[0] if len(n_list) > 0 else (0, [])
+
+
+    def getGloutonPath(self, origin, cheeses):
+        p, d = [origin], 0
+        current_location = origin
+        temp = cheeses.copy()
+
+        while temp:
+            way = [(self.distanceMetagraph[current_location][c], c) for c in temp]
+            way.sort()
+
+            current_location = way[0][1]
+            temp.remove(current_location)
+
+            p.append(current_location)
+            d += way[0][0]
+
+        return (d, p)
+
+
+
+
+
