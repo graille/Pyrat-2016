@@ -13,31 +13,49 @@ cheeses = [(7, 3), (0, 4), (6, 7), (1, 0), (5, 3), (2, 4), (7, 2), (0, 5), (4, 6
 w, h = 8,8
 player_origin = (7,0)
 
-#mg.showNodes(cheeses, size=15)
+mg = MazeViewer(mazeMap, w, h)
+mg.showNodes(cheeses, size=15)
 engine = Engine(mazeMap, w, h)
 engine.update((7,0), (0,7), 0, 0, cheeses, 3)
 engine.maze.addNodeToMetagraph(player_origin, cheeses)
-
+engine.maze.addNodeToMetagraph((0,7), cheeses)
 
 #d, p = engine.maze.getGloutonPath(player_origin, cheeses)
 #p = engine.maze.convertMetaPathToRealPaths(p)
 #print("Glouton dist : "+ str(d))
 
-# dm = np.inf
-# pm = []
+dm = np.inf
+pm = []
 #
-# for j in range(1000):
-#     if j % 10 == 0:
-#         print("## " + str(j))
-#     to = TwoOPT(engine.maze, cheeses + [player_origin])
-#     to.process()
-#     d, p = to.getResult(player_origin)
-#     if d < dm:
-#         dm, pm = d, p
+for j in range(1000):
+    if j % 10 == 0:
+        print("#" + str(j))
+    to = TwoOPT(engine.maze, cheeses + [player_origin])
+    to.process()
+    d, p = to.getResult(player_origin)
+    if d < dm:
+        dm, pm = d, p
 #
-# print("Best : " + str(dm))
-# p = engine.maze.convertMetaPathToRealPaths(p)
+print("Best : " + str(dm))
+p = engine.maze.convertMetaPathToRealPaths(pm)
 
+mg.showPath(p)
+
+dm = np.inf
+pm = []
+for j in range(1000):
+    if j % 10 == 0:
+        print("#" + str(j))
+    to = TwoOPT(engine.maze, cheeses + [(0,7)])
+    to.process()
+    d, p = to.getResult((0,7))
+    if d < dm:
+        dm, pm = d, p
+#
+print("Best : " + str(dm))
+p = engine.maze.convertMetaPathToRealPaths(pm)
+mg.showPath(p, color='grey')
+mg.show()
 
 # t = time.clock()
 # f = Fourmis(engine.maze, player_origin, cheeses)
@@ -52,23 +70,5 @@ engine.maze.addNodeToMetagraph(player_origin, cheeses)
 #         d += engine.maze.getDistance(l[k], l[k + 1])
 #
 # print("dist : " + str(d))
-
-
-km = K_Means(engine.maze, 4, cheeses)
-km.process(None, 20)
-
-m, S = km.m, km.S
-print(m)
-for i in range(len(m) - 1):
-    mg = MazeViewer(mazeMap, w, h)
-    mg.CURRENT_PATH_COLOR = 0
-    for j in range(len(m[i])):
-        print(m[i][j])
-        mg.showNodes(S[i][j],  color=mg.PATH_COLOR[mg.CURRENT_PATH_COLOR], size=15)
-        mg.showNodes([m[i][j]], color=mg.PATH_COLOR[mg.CURRENT_PATH_COLOR], size=25)
-        mg.CURRENT_PATH_COLOR = (mg.CURRENT_PATH_COLOR + 1) % len(mg.PATH_COLOR)
-
-    mg.show()
-
 
 

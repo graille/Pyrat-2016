@@ -70,6 +70,9 @@ class MazeViewer:
         # Generation
         self.generate()
 
+        # Screenshoot
+        self.IMAGE_NB = 0
+
     def screenshotButton(self, row):
         # Declaration des boutons de contôles de la couche layer
         b = Button(self.window, text="Screen", width=10, command=self.takeScreenshot)
@@ -78,7 +81,7 @@ class MazeViewer:
         b.grid(column=1, row=row, columnspan=4)
 
     def takeScreenshot(self, *args):
-        FILE_NAME = str(time.clock())
+        FILE_NAME = "img_" + str(self.IMAGE_NB)
         self.canvas.update()
 
         # Generate dirs
@@ -95,6 +98,8 @@ class MazeViewer:
         call(['rm', "./screenshots/" + FILE_NAME + ".ps"])
 
         self.writeLog("Screenshot enregistré : " + FILE_NAME)
+
+        self.IMAGE_NB += 1
 
     def generate(self):
         font = tkFont.Font(family='Helvetica', size=6)
@@ -154,7 +159,7 @@ class MazeViewer:
             self.showNextPath(path_id)
 
         self.takeScreenshot()
-
+        
         while self.pathContainer[path_id]['current'] > -1:
             self.showPreviousPath(path_id)
 
