@@ -309,6 +309,7 @@ class Engine:
                 self.player.setPath(self.maze.convertMetaPathToRealPaths(p))
             else:
                 pass
+
         ############################################### RADAR MODULE ####################################################
 
         if self.RADAR_RADIUS > 0:
