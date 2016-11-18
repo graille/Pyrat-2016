@@ -62,6 +62,7 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
 
         return action
     except Exception:
+        print("FATAL ERROR : restart entities")
         engine.player.path = []
         engine.player.destination = None
 

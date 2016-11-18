@@ -85,6 +85,7 @@ def pause(pid):
     print("Pause " + str(pid))
     os.popen(["kill", "-TSTP " + str(pid)])
 
+
 def restart(pid):
     print("Continue " + str(pid))
     os.popen(["kill", "-CONT " + str(pid)])
@@ -93,10 +94,7 @@ def init():
     pass
 
 def doSomething(turn):
-    try:
-        if turn % 2 == 0:
-            main('P')
-        else:
-            main('C')
-    except Exception:
-        pass
+    if turn % 2 == 0:
+        main('P')
+    else:
+        main('C')
