@@ -61,9 +61,9 @@ def main(arg):
 
     pid_op = pids_temp[0]
     if arg == 'P':
-        pause(pid_op)
+        pause(pid_op[0])
     else:
-        restart(pid_op)
+        restart(pid_op[0])
 
 def pause(pid):
     print("KILLLLL " + str(pid))
@@ -77,7 +77,10 @@ def init():
     pass
 
 def doSomething(turn):
-    if turn % 2 == 0:
-        main('P')
-    else:
-        main('C')
+    try:
+        if turn % 2 == 0:
+            main('P')
+        else:
+            main('C')
+    except Exception:
+        pass
