@@ -102,7 +102,7 @@ class Utils:
                         self.win()
 
                 elif self.method == 1:
-                    if rd.randint(0,100) > 80:
+                    if rd.randint(0,100) > 70:
                         self.win()
 
                     if self.state and rd.randint(0,100) > 40:
