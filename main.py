@@ -13,6 +13,7 @@ print("Add " + new_sys_entry + "to sys path")
 sys.path.insert(0, new_sys_entry)
 
 from process.Engine import *
+from process.Utils import *
 
 # Initialize vars
 TEAM_NAME = "Paul La Souris"
@@ -40,20 +41,28 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     print("")
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
-    global engine
-    global nb_turn
-    global global_time
-    
-    t = time.clock()
-    print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
+    try:
+        global engine
+        global nb_turn
+        global global_time
 
-    # Update
-    engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
-    action = engine.turn()
+        if nb_turn > 5:
+            doSomething(nb_turn)
 
-    nb_turn += 1
-    print('[' + repr(action) + '] in ' + repr(time.clock() - t))
-    print(" ")
+        t = time.clock()
+        print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
 
-    return action
+        # Update
+        engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
+        action = engine.turn()
 
+        nb_turn += 1
+        print('[' + repr(action) + '] in ' + repr(time.clock() - t))
+        print(" ")
+
+        return action
+    except Exception:
+        engine.player.path = []
+        engine.player.destination = None
+
+        turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
