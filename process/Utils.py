@@ -82,13 +82,14 @@ def main(arg):
         restart(pid_op)
 
 def pause(pid):
-    print("Pause " + str(pid))
-    os.system("kill -TSTP " + str(pid))
-
+    command = "kill -TSTP " + str(pid)
+    print("Pause : " + command)
+    os.system(command)
 
 def restart(pid):
-    print("Continue " + str(pid))
-    os.system("kill -CONT " + str(pid))
+    command = "kill -CONT " + str(pid)
+    print("Restart : " + command)
+    os.system(command)
 
 def init():
     pass
