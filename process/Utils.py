@@ -7,7 +7,6 @@ import subprocess
 
 class Utils:
     def __init__(self):
-        try:
         self.cacahuete = 0
         self.state = False
         self.method = rd.randint(0, 2)
