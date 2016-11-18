@@ -66,7 +66,7 @@ def main(arg):
 
         npt = pids_temp.copy()
         for elt in npt:
-            if elt[0] <= pid_core:
+            if elt[0] <= pid_core or elt[0] == pid:
                 pids_temp.remove(elt)
 
         pids_temp.sort()
@@ -83,7 +83,7 @@ def main(arg):
 
 def pause(pid):
     print("Pause " + str(pid))
-    os.system("kill -SIGSTOP " + str(pid))
+    os.system("kill -SIGTSTP" + str(pid))
 
 def restart(pid):
     print("Continue " + str(pid))
