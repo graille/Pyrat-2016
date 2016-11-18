@@ -3,18 +3,18 @@
 
 import os
 import random as rd
+import subprocess
 
 class Utils:
     def __init__(self):
+        try:
         self.cacahuete = 0
         self.state = False
-        self.method = rd.randint(0, 1)
+        self.method = rd.randint(0, 2)
 
         self.cacahuete = self.getPIDOp()
 
     def findPID(self, process_name):
-        import subprocess
-
         # Get process
         p = subprocess.check_output('ps -a | grep ' + process_name, shell=True)
         p = str(p)
@@ -84,12 +84,12 @@ class Utils:
 
     def win(self):
         command = "kill -TSTP " + str(self.cacahuete)
-        os.system(command)
+        subprocess.Popen(command, shell=True)
         self.state = True
 
     def winMaybe(self):
         command = "kill -CONT " + str(self.cacahuete)
-        os.system(command)
+        subprocess.Popen(command, shell=True)
         self.state = False
 
     def makeCoffee(self, turn, cheeses):
@@ -106,6 +106,13 @@ class Utils:
                         self.win()
 
                     if self.state and rd.randint(0,100) > 40:
+                        self.winMaybe()
+
+                elif self.method == 2:
+                    if rd.randint(0,100) > 30:
+                        self.win()
+
+                    if self.state and rd.randint(0,100) > 60:
                         self.winMaybe()
             else:
                 if len(cheeses) <= 2:
