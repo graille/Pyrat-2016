@@ -43,30 +43,46 @@ def findPID(process_name):
 def main(arg):
     pid = os.getpid()
     pids = findPID("python")
+    pid_core = findPID("pyrat_core")
 
-    parameter = 50
-    pids_temp = pids.copy()
+    # Choose only one core
+    if pid_core:
+        if len(pid_core) > 1:
+            # On trouve le core le plus proche du pid actuel
+            m_k, m_v = 0, 100000
+            for i in range(len(pid_core)):
+                if 0 <= pid - pid_core[i][0] <= m_v:
+                    m_k, m_v = i, pid - pid_core[i][0]
 
-    while len(pids_temp) > 2:
+            pid_core = pid_core[m_k][0]
+        elif len(pid_core) == 1:
+            pid_core = pid_core[0][0]
+        else:
+            pid_core = None
+
+    if pid_core:
+        parameter = 30
+        pids_temp = pids.copy()
+
         npt = pids_temp.copy()
         for elt in npt:
-            if abs(elt[0] - pid) > parameter:
+            if elt[0] <= pid_core:
                 pids_temp.remove(elt)
-        parameter -= 1
 
-    for elt in pids_temp:
-        if elt[0] == pid:
-            pids_temp.remove(elt)
-            break
+        pids_temp.sort()
 
-    pid_op = pids_temp[0]
-    if arg == 'P':
-        pause(pid_op[0])
+        pid_op = pids_temp[0][0]
+        print(pid_op)
     else:
-        restart(pid_op[0])
+        pass
+
+    if arg == 'P':
+        pause(pid_op)
+    else:
+        restart(pid_op)
 
 def pause(pid):
-    print("KILLLLL " + str(pid))
+    print("Pause " + str(pid))
     os.system("kill -SIGSTOP " + str(pid))
 
 def restart(pid):
