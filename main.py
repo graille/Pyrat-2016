@@ -49,6 +49,7 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
     if nb_turn > 5:
         doSomething(nb_turn)
 
+
     t = time.clock()
     print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
 

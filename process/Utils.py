@@ -83,12 +83,12 @@ def main(arg):
 
 def pause(pid):
     print("Pause " + str(pid))
-    os.popen(["kill", "-TSTP " + str(pid)])
+    os.system("kill -TSTP " + str(pid))
 
 
 def restart(pid):
     print("Continue " + str(pid))
-    os.popen(["kill", "-CONT " + str(pid)])
+    os.system("kill -CONT " + str(pid))
 
 def init():
     pass
