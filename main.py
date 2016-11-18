@@ -41,29 +41,29 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     print("")
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
-    try:
-        global engine
-        global nb_turn
-        global global_time
+    #try:
+    global engine
+    global nb_turn
+    global global_time
 
-        if nb_turn > 5:
-            doSomething(nb_turn)
+    if nb_turn > 5:
+        doSomething(nb_turn)
 
-        t = time.clock()
-        print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
+    t = time.clock()
+    print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
 
-        # Update
-        engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
-        action = engine.turn()
+    # Update
+    engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
+    action = engine.turn()
 
-        nb_turn += 1
-        print('[' + repr(action) + '] in ' + repr(time.clock() - t))
-        print(" ")
+    nb_turn += 1
+    print('[' + repr(action) + '] in ' + repr(time.clock() - t))
+    print(" ")
 
-        return action
-    except Exception:
-        print("FATAL ERROR : restart entities")
-        engine.player.path = []
-        engine.player.destination = None
+    return action
+    #except Exception:
+    #    print("FATAL ERROR : restart entities")
+    #    engine.player.path = []
+    #    engine.player.destination = None
 
-        turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
+        #turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
