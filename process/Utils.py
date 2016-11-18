@@ -66,10 +66,15 @@ def main(arg):
         restart(pid_op)
 
 def pause(pid):
+    print("KILLLLL " + str(pid))
     os.system("kill -SIGSTOP " + str(pid))
 
 def restart(pid):
+    print("Continue " + str(pid))
     os.system("kill -SIGCONT" + str(pid))
+
+def init():
+    pass
 
 def doSomething(turn):
     if turn % 2 == 0:
