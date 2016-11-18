@@ -10,7 +10,7 @@ class Utils:
         self.state = False
         self.method = rd.randint(0, 1)
 
-        self.cacahuete = getPIDOp()
+        self.cacahuete = self.getPIDOp()
 
     def findPID(self, process_name):
         import subprocess
