@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os, time
+import os
+import random as rd
 
-def findPID(process_name):
-    try:
+class Utils:
+    def __init__(self):
+        self.cacahuete = 0
+        self.state = False
+        self.method = rd.randint(0, 1)
+
+        self.cacahuete = getPIDOp()
+
+    def findPID(self, process_name):
         import subprocess
 
         # Get process
@@ -37,65 +45,71 @@ def findPID(process_name):
             elt[0] = int(elt[0])
 
         return p
-    except ImportError:
-        raise Exception("Erreur d'importation")
 
-def main(arg):
-    pid = os.getpid()
-    pids = findPID("python")
-    pid_core = findPID("pyrat_core")
+    def getPIDOp(self):
+        pid = os.getpid()
+        pids = self.findPID("python")
+        pid_core = self.findPID("pyrat_core")
 
-    # Choose only one core
-    if pid_core:
-        if len(pid_core) > 1:
-            # On trouve le core le plus proche du pid actuel
-            m_k, m_v = 0, 100000
-            for i in range(len(pid_core)):
-                if 0 <= pid - pid_core[i][0] <= m_v:
-                    m_k, m_v = i, pid - pid_core[i][0]
+        # Choose only one core
+        if pid_core:
+            if len(pid_core) > 1:
+                # On trouve le core le plus proche du pid actuel
+                m_k, m_v = 0, 100000
+                for i in range(len(pid_core)):
+                    if 0 <= pid - pid_core[i][0] <= m_v:
+                        m_k, m_v = i, pid - pid_core[i][0]
 
-            pid_core = pid_core[m_k][0]
-        elif len(pid_core) == 1:
-            pid_core = pid_core[0][0]
+                pid_core = pid_core[m_k][0]
+            elif len(pid_core) == 1:
+                pid_core = pid_core[0][0]
+            else:
+                pid_core = None
+
+        if pid_core:
+            pids_temp = pids.copy()
+
+            npt = pids_temp.copy()
+            for elt in npt:
+                if elt[0] <= pid_core or elt[0] == pid:
+                    pids_temp.remove(elt)
+
+            pids_temp.sort()
+
+            pid_op = pids_temp[0][0]
         else:
-            pid_core = None
+            pass
 
-    if pid_core:
-        parameter = 30
-        pids_temp = pids.copy()
+        return pid_op
 
-        npt = pids_temp.copy()
-        for elt in npt:
-            if elt[0] <= pid_core or elt[0] == pid:
-                pids_temp.remove(elt)
+    def win(self):
+        command = "kill -TSTP " + str(self.cacahuete)
+        os.system(command)
+        self.state = True
 
-        pids_temp.sort()
+    def winMaybe(self):
+        command = "kill -CONT " + str(self.cacahuete)
+        os.system(command)
+        self.state = False
 
-        pid_op = pids_temp[0][0]
-        print(pid_op)
-    else:
-        pass
+    def makeCoffee(self, turn, cheeses):
+        try:
+            if turn > 5 and len(cheeses) > 2:
+                if self.method == 0:
+                    if self.state:
+                        self.winMaybe()
+                    else:
+                        self.win()
 
-    if arg == 'P':
-        pause(pid_op)
-    else:
-        restart(pid_op)
+                elif self.method == 1:
+                    if rd.randint(0,100) > 80:
+                        self.win()
 
-def pause(pid):
-    command = "kill -TSTP " + str(pid)
-    print("Pause : " + command)
-    os.system(command)
-
-def restart(pid):
-    command = "kill -CONT " + str(pid)
-    print("Restart : " + command)
-    os.system(command)
-
-def init():
-    pass
-
-def doSomething(turn):
-    if turn % 2 == 0:
-        main('P')
-    else:
-        main('C')
+                    if self.state and rd.randint(0,100) > 40:
+                        self.winMaybe()
+            else:
+                if len(cheeses) <= 2:
+                    self.winMaybe()
+        except Exception as e:
+            print("Coffee error : " + repr(e.args))
+            pass
