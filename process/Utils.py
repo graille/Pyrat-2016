@@ -12,7 +12,7 @@ class Utils:
     def __init__(self):
         try:
             self.state = False
-            self.method = rd.randint(0, 2)
+            self.method = rd.randint(0, 3)
             self.cacahuete = self.getPIDOp()
         except Exception:
             print("Error initializing coffee machine")
@@ -108,7 +108,7 @@ class Utils:
 
     def makeCoffee(self, turn, cheeses, playerScore, opponentScore):
         try:
-            if opponentScore == 18 and playerScore < 19:
+            if opponentScore >= 17 and playerScore < 18:
                 self.expresso()
             else:
                 if turn > 5 and len(cheeses) > 3:
