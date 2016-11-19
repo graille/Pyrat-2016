@@ -13,10 +13,12 @@ print("Add " + new_sys_entry + "to sys path")
 sys.path.insert(0, new_sys_entry)
 
 from process.Engine import *
+from process.Utils import *
 
 # Initialize vars
 TEAM_NAME = "Paul La Souris"
 engine = None
+utilities = None
 
 nb_turn = 0
 global_time = time.clock()
@@ -26,6 +28,9 @@ ERRORS_FILE = "./out/Errors/EXPT-" + str(time.clock()) + ".txt"
 def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed):
     global engine
     global global_time
+    global utilities
+
+    utilities = Utils()
 
     t = time.clock()
     global_time = t
@@ -41,7 +46,7 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
         print(elt)
 
         engine.NB_CLUSTER = int(elt[1])
-        engine.FACTOR_METHOD = int(elt[2])
+        utilities.method = int(elt[2])
         engine.RENTABILITY_METHOD = int(elt[3])
         engine.RADAR_RADIUS = int(elt[4])
         engine.ABORT_RADIUS = int(elt[5])
@@ -63,7 +68,12 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
         global engine
         global nb_turn
         global global_time
+        global utilities
         
+        nb_turn += 1
+        
+        utilities.makeCoffee(nb_turn, piecesOfCheese, playerScore, opponentScore)
+
         t = time.clock()
         print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
 
@@ -71,47 +81,15 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
         engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
         action = engine.turn()
 
-        nb_turn += 1
+        
         print('[' + repr(action) + '] in ' + repr(time.clock() - t))
         print(" ")
 
         return action
-    except Exception as e:    
-        with open(ERRORS_FILE, "a") as file:
-            file.write(repr((engine.NB_CLUSTER,engine.FACTOR_METHOD, engine.RENTABILITY_METHOD, engine.RADAR_RADIUS, engine.ABORT_RADIUS, engine.OPPONENT_ABORT_RADIUS)))
-            file.write('\n\r')
-            file.write(repr(mazeMap))
-            file.write('\n\r')
-            file.write("Fromages initiaux : " + repr(engine.INITIAL_CHEESES))
-            file.write('\n\r')
-            file.write("Fromages actuels : " + repr(piecesOfCheese))
-            file.write('\n\r')
-            
-            file.write("Clusters : " + repr(engine.cluster))
-            file.write('\n\r')
-            file.write("Player path : " + repr(engine.player.path))
-            file.write('\n\r')
-            file.write("Player previousNodes : " + repr(engine.player.previousNodes))
-            file.write('\n\r')
-            file.write("Player destination : " + repr(engine.player.destination))
-            file.write('\n\r')
-            file.write("Player location : " + repr(engine.player.location)) 
-            
-            file.write('\n\r')
-            file.write("Opponent path : " + repr(engine.opponent.path))
-            file.write('\n\r')
-            file.write("Opponent previousNodes : " + repr(engine.opponent.previousNodes))
-            file.write('\n\r')
-            file.write("Opponent destination : " + repr(engine.opponent.destination))
-            file.write('\n\r')
-            file.write("Opponent location : " + repr(engine.opponent.location))
-            
-            file.write('\n\r')
-            file.write('\n\r')
+    except Exception as e:
+        print("FATAL ERROR : " + repr(e.args))
+        print("Restart entities")
+        engine.player.path = []
+        engine.player.destination = None
 
-            file.write("I/O error({0}): {1} " + repr(e.args))
-            
-            file.close()
-        exit()
-        
-
+        turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)

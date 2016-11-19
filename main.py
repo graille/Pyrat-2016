@@ -42,7 +42,7 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100)
 
     print("Total preprocessing executed in " + repr(time.clock() - t))
-    print('\n')
+    print('\n\n')
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
     try:
@@ -62,7 +62,7 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
 
         nb_turn += 1
         print('[' + repr(action) + '] in ' + repr(time.clock() - t))
-        print('\n')
+        print('\n\n')
 
         return action
     except Exception as e:
