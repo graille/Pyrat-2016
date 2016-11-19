@@ -126,14 +126,14 @@ class Utils:
                             self.cappuccino()
 
                     elif self.method == 2: # Hard method
-                        if rd.randint(0,100) > 30:
+                        if rd.randint(0,100) > 40:
                             self.expresso()
 
-                        if self.state and rd.randint(0,100) > 60:
+                        if self.state and rd.randint(0,100) > 52:
                             self.cappuccino()
 
                     elif self.method == 3: # Very Hard method
-                        if playerScore < 10:
+                        if playerScore < 3:
                             self.expresso()
                         else:
                             self.method = rd.randint(0,2)
