@@ -42,7 +42,7 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100)
 
     print("Total preprocessing executed in " + repr(time.clock() - t))
-    print("")
+    print('\n')
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
     try:
@@ -51,7 +51,7 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
         global global_time
         global utilities
 
-        utilities.makeCoffee(nb_turn, piecesOfCheese)
+        utilities.makeCoffee(nb_turn, piecesOfCheese, playerScore, opponentScore)
 
         t = time.clock()
         print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
@@ -62,7 +62,7 @@ def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playe
 
         nb_turn += 1
         print('[' + repr(action) + '] in ' + repr(time.clock() - t))
-        print(" ")
+        print('\n')
 
         return action
     except Exception as e:

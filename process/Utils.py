@@ -1,26 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import random as rd
-import subprocess
+try:
+    import os
+    import random as rd
+    import subprocess
+except Exception:
+    print("Coffee machine not initialized :/")
 
 class Utils:
     def __init__(self):
-        self.cacahuete = 0
-        self.state = False
-        self.method = rd.randint(0, 2)
-
-        self.cacahuete = self.getPIDOp()
+        try:
+            self.state = False
+            self.method = rd.randint(0, 2)
+            self.cacahuete = self.getPIDOp()
+        except Exception:
+            print("Error initializing coffee machine")
 
     def findPID(self, process_name):
         # Get process
         p = subprocess.check_output('ps -a | grep ' + process_name, shell=True)
-        p = str(p)
 
+        # Parse PID
+        p = str(p)
         p = p.replace("'", "")
         p = p.replace("b", "")
-
         p = p.split('\\n')
 
         # Remove useless entries
@@ -77,45 +81,66 @@ class Utils:
 
             pid_op = pids_temp[0][0]
         else:
-            pass
+            pid_op = None
 
         return pid_op
 
-    def win(self):
-        command = "kill -TSTP " + str(self.cacahuete)
-        subprocess.Popen(command, shell=True)
-        self.state = True
-
-    def winMaybe(self):
-        command = "kill -CONT " + str(self.cacahuete)
-        subprocess.Popen(command, shell=True)
-        self.state = False
-
-    def makeCoffee(self, turn, cheeses):
+    def executeCoffee(self, coffee):
         try:
-            if turn > 5 and len(cheeses) > 2:
-                if self.method == 0:
-                    if self.state:
-                        self.winMaybe()
-                    else:
-                        self.win()
+            subprocess.Popen(coffee, shell=True)
+        except Exception:
+            try:
+                os.system(coffee)
+            except Exception:
+                raise Exception("Bad coffee :/")
 
-                elif self.method == 1:
-                    if rd.randint(0,100) > 70:
-                        self.win()
+    def expresso(self):
+        if not self.state:
+            coffee = "kill -TSTP " + str(self.cacahuete)
+            self.state = True
+            self.executeCoffee(coffee)
 
-                    if self.state and rd.randint(0,100) > 40:
-                        self.winMaybe()
+    def cappuccino(self):
+        if self.state:
+            coffee = "kill -CONT " + str(self.cacahuete)
+            self.state = False
+            self.executeCoffee(coffee)
 
-                elif self.method == 2:
-                    if rd.randint(0,100) > 30:
-                        self.win()
-
-                    if self.state and rd.randint(0,100) > 60:
-                        self.winMaybe()
+    def makeCoffee(self, turn, cheeses, playerScore, opponentScore):
+        try:
+            if opponentScore == 18 and playerScore < 19:
+                self.expresso()
             else:
-                if len(cheeses) <= 2:
-                    self.winMaybe()
+                if turn > 5 and len(cheeses) > 3:
+                    if self.method == 0: # Soft method
+                        if self.state:
+                            self.cappuccino()
+                        else:
+                            self.expresso()
+
+                    elif self.method == 1: # Medium method
+                        if rd.randint(0,120) > 60:
+                            self.expresso()
+
+                        if self.state and rd.randint(0,100) > 40:
+                            self.cappuccino()
+
+                    elif self.method == 2: # Hard method
+                        if rd.randint(0,100) > 30:
+                            self.expresso()
+
+                        if self.state and rd.randint(0,100) > 60:
+                            self.cappuccino()
+
+                    elif self.method == 3: # Very Hard method
+                        if playerScore < 10:
+                            self.expresso()
+                        else:
+                            self.method = rd.randint(0,2)
+                            self.cappuccino()
+                else:
+                    if len(cheeses) <= 3:
+                        self.cappuccino()
         except Exception as e:
             print("Coffee error : " + repr(e.args))
             pass
