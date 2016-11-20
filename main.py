@@ -34,26 +34,31 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     engine = Engine(mazeMap, mazeWidth, mazeHeight)
 
     # Update with preprocessing argument
-    engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100)
+    engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100, 0)
 
     print("Total preprocessing executed in " + repr(time.clock() - t))
-    print("")
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
-    global engine
-    global nb_turn
-    global global_time
-    
-    t = time.clock()
-    print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
+    try:
+        global engine
+        global nb_turn
+        global global_time
 
-    # Update
-    engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
-    action = engine.turn()
+        nb_turn += 1
+        t = time.clock()
+        print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
 
-    nb_turn += 1
-    print('[' + repr(action) + '] in ' + repr(time.clock() - t))
-    print(" ")
+        # Update
+        engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100, nb_turn)
+        action = engine.turn()
 
-    return action
+        print('[' + repr(action) + '] in ' + repr(time.clock() - t))
 
+        return action
+    except Exception as e:
+        print("FATAL ERROR : " + repr(e.args))
+        print("Restart entities")
+        engine.player.path = []
+        engine.player.destination = None
+
+        turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)
