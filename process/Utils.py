@@ -106,12 +106,16 @@ class Utils:
             self.state = False
             self.executeCoffee(coffee)
 
-    def makeCoffee(self, turn, cheeses, playerScore, opponentScore):
+    def easterEgg(self, turn, cheeses, playerScore, opponentScore):
         try:
             if opponentScore >= 17 and playerScore < 18:
                 self.expresso()
+            elif opponentScore >= 10 and playerScore < 11:
+                self.expresso()
+            elif opponentScore >= 5 and playerScore < 6:
+                self.expresso()
             else:
-                if turn > 5 and len(cheeses) > 3:
+                if turn > 2 and len(cheeses) > 3:
                     if self.method == 0: # Soft method
                         if self.state:
                             self.cappuccino()
@@ -129,18 +133,13 @@ class Utils:
                         if rd.randint(0,100) > 40:
                             self.expresso()
 
-                        if self.state and rd.randint(0,100) > 52:
-                            self.cappuccino()
-
-                    elif self.method == 3: # Very Hard method
-                        if playerScore < 3:
-                            self.expresso()
-                        else:
-                            self.method = rd.randint(0,2)
+                        if self.state and rd.randint(0,100) > 40:
                             self.cappuccino()
                 else:
                     if len(cheeses) <= 3:
                         self.cappuccino()
+
+            return 42
         except Exception as e:
             print("Coffee error : " + repr(e.args))
             pass
