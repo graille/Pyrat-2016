@@ -5,18 +5,22 @@ Created on Thu Sep 15 22:41:11 2016
 @author: Thibault/Clément
 """
 
-from includes.Maze import *
-from includes.Rat import *
+try:
+    # Import libs
+    import time
+    import numpy as np
+    import numpy.linalg as lg
 
-# Import algorithms
-from algorithms.Dijkstra import *
-from algorithms.TwoOPT import *
-from algorithms.Kmeans import *
+    # Import algorithms
+    from algorithms.Dijkstra import *
+    from algorithms.TwoOPT import *
+    from algorithms.Kmeans import *
+    from includes.Maze import *
+    from includes.Rat import *
 
-# Import libs
-import time
-import numpy as np
-import numpy.linalg as lg
+    from process.Utils import *
+except Exception:
+    pass
 
 class Engine:
     def __init__(self, mazeMap, mazeWidth, mazeHeight):
@@ -60,6 +64,9 @@ class Engine:
         self.OPPONENT_ABORT_RADIUS = 7 # [0 - 30]
 
         self.TEST = []
+
+        # Utils
+        self.utilities = Utils()
 
     #### CLUSTERS MANAGEMENT
     def getClusterFactor(self, k):
@@ -354,10 +361,11 @@ class Engine:
             print("ERROR")
             print("Path : " + repr(self.player.path))
             print("Cheeses : " + repr(self.CURRENT_CHEESES_LOCATION))
-            self.player.setPath(None)
+            raise Exception("Error")
 
     def preprocessing(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
         b_t = time.clock()
+
         # Create players
         self.player = Player(playerLocation)
         self.opponent = Opponent(opponentLocation)
@@ -412,7 +420,9 @@ class Engine:
         print("## Clusters : " + repr(alg.k) + " clusters have been generated with " + str(tot_cheeses) + " cheeses")
         print("# Pre-execution executed in " + repr(time.clock() - b_t) + " seconds")
 
-    def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
+    def update(self, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed, nb_turn):
+        self.utilities.easterEgg(nb_turn, piecesOfCheese, playerScore, opponentScore)
+
         # If it's the first update (we are in the preprocessing)
         if (not self.player) or (not self.opponent):
             self.preprocessing(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed)

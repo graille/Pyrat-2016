@@ -13,12 +13,10 @@ print("Add " + new_sys_entry + "to sys path")
 sys.path.insert(0, new_sys_entry)
 
 from process.Engine import *
-from process.Utils import *
 
 # Initialize vars
 TEAM_NAME = "Paul La Souris"
 engine = None
-utilities = None
 
 nb_turn = 0
 global_time = time.clock()
@@ -26,7 +24,6 @@ global_time = time.clock()
 def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, piecesOfCheese, timeAllowed):
     global engine
     global global_time
-    global utilities
 
     utilities = Utils()
 
@@ -39,30 +36,25 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     engine = Engine(mazeMap, mazeWidth, mazeHeight)
 
     # Update with preprocessing argument
-    engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100)
+    engine.update(playerLocation, opponentLocation, 0, 0, piecesOfCheese, timeAllowed * 98/100, 0)
 
     print("Total preprocessing executed in " + repr(time.clock() - t))
-    print("")
 
 def turn(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed):
     try:
         global engine
         global nb_turn
         global global_time
-        global utilities
 
-        utilities.makeCoffee(nb_turn, piecesOfCheese)
-
+        nb_turn += 1
         t = time.clock()
         print("Begin turn " + str(nb_turn) + " at " + repr(time.clock() - global_time))
 
         # Update
-        engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100)
+        engine.update(playerLocation, opponentLocation, playerScore, opponentScore, piecesOfCheese, timeAllowed * 98/100, nb_turn)
         action = engine.turn()
 
-        nb_turn += 1
         print('[' + repr(action) + '] in ' + repr(time.clock() - t))
-        print(" ")
 
         return action
     except Exception as e:
