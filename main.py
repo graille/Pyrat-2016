@@ -25,8 +25,6 @@ def preprocessing(mazeMap, mazeWidth, mazeHeight, playerLocation, opponentLocati
     global engine
     global global_time
 
-    utilities = Utils()
-
     t = time.clock()
     global_time = t
     
